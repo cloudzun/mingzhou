@@ -28,7 +28,7 @@ for (const s of SRC) {
     console.warn("缺失内容源:", src);
     continue;
   }
-  let body = fs.readFileSync(src, "utf8").replace(/\r\n/g, "\n");
+  let body = fs.readFileSync(src, "utf8").replace(/^\uFEFF/, ).replace(/\r\n/g, "\n");
   // 去掉原文件的一级标题与顶部元信息引用块，标题由页面布局提供
   body = body.replace(/^# .*\n/, "");
   body = body.replace(/^(?:>.*\n)+\n?/m, "");
