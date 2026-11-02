@@ -1,0 +1,21 @@
+---
+import { loadDocs, render } from "../lib/docs.js";
+const docs = loadDocs();
+const parts = docs.map((d) => ({ title: d.title, html: render(d.body).html }));
+---
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8" />
+<title>整本打印视图 · 明州 AI Coding 手册</title>
+<style is:global>@import "/src/styles/global.css";</style>
+<style>
+@page { size: A4; margin: 16mm; }
+body { max-width: 780px; margin: 0 auto; padding: 16px; font-size: 10.5pt; }
+h1 { page-break-before: always; }
+h1:first-of-type { page-break-before: auto; }
+figure, table, pre { page-break-inside: avoid; }
+@media print { .noprint { display: none } }
+</style></head>
+<body>
+<p class="noprint" style="font-size:13px;color:var(--muted)">打印视图：用浏览器"打印 → 另存为 PDF"。图为内联矢量 SVG。</p>
+{parts.map((p) => (<section><h1>{p.title}</h1><div class="prose" set:html={p.html} /></section>))}
+</body></html>

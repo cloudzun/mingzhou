@@ -1,0 +1,16 @@
+---
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>版本 v1.0 · 明州 AI Coding 手册</title>
+<style is:global>@import "/src/styles/global.css";</style>
+
+</head><body>
+<header class="top"><a class="brand" href="${BASE}/">明州 · AI Coding 实验手册</a>
+<nav class="topnav"><a href="${BASE}/handbook/00/">正文</a><a href="${BASE}/demo/fruitlab">演示</a>
+<a href="${BASE}/wizard/fruitlab">向导</a><a href="${BASE}/kit">素材</a><a href="${BASE}/search">搜索</a></nav></header>
+<main class="main" style="max-width:760px;margin:0 auto;padding:48px 20px">
+<h1>版本 v1.0</h1><p class="lede">旧版本按目录保留，根路径永远指向当前版。</p>
+<p><a href="${BASE}/">→ 回到当前版本</a></p></main>
+</body></html>

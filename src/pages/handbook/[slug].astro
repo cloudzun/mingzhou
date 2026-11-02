@@ -1,0 +1,72 @@
+---
+import { loadDocs, render } from "../../lib/docs.js";
+
+export function getStaticPaths() {
+  return loadDocs().map((d) => ({ params: { slug: d.slug }, props: { doc: d } }));
+}
+
+const { doc } = Astro.props;
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+const docs = loadDocs();
+const { html } = render(doc.body);
+const toc = [...html.matchAll(/<h([23]) id="([^"]+)">([\s\S]*?)<\/h\1>/g)].map((m) => ({
+  level: Number(m[1]),
+  id: m[2],
+  text: m[3].replace(/<[^>]+>/g, '')
+}));
+const idx = docs.findIndex((d) => d.slug === doc.slug);
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{doc.title} · 明州 AI Coding 手册</title>
+    <style is:global>
+      @import "../../styles/global.css";
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href={`${BASE}/`}>明州 · AI Coding 实验手册</a>
+      <nav class="topnav">
+        <a href={`${BASE}/`}>首页</a>
+        <a href={`${BASE}/demo/fruitlab`}>演示</a>
+        <a href={`${BASE}/wizard/fruitlab`}>向导</a>
+        <a href={`${BASE}/kit`}>素材</a>
+      </nav>
+    </header>
+
+    <div class="shell">
+      <aside class="side">
+        <p class="side-t">正文</p>
+        <ul class="side-list">
+          {docs.map((d) => (
+            <li class:list={["side-li", d.slug === doc.slug && "on"]}>
+              <a href={`${BASE}/handbook/${d.slug}/`}>{d.title}</a>
+            </li>
+          ))}
+        </ul>
+        <p class="side-t">本页</p>
+        <ul class="toc-list">
+          {toc.map((t) => (
+            <li class={`lv${t.level}`}><a href={`#${t.id}`}>{t.text}</a></li>
+          ))}
+        </ul>
+      </aside>
+
+      <main class="main">
+        <article class="doc">
+          <p class="crumb">
+            {idx > 0 ? <a href={`${BASE}/handbook/${docs[idx - 1].slug}/`}>← {docs[idx - 1].title}</a> : <a href={`${BASE}/`}>← 首页</a>}
+            {idx < docs.length - 1 && <a class="next" href={`${BASE}/handbook/${docs[idx + 1].slug}/`}>{docs[idx + 1].title} →</a>}
+          </p>
+          <h1>{doc.title}</h1>
+          <p class="lede">{doc.desc}</p>
+          <div class="prose" set:html={html} />
+        </article>
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "mingzhou",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync": "node scripts/sync-content.mjs",
+    "dev": "astro dev",
+    "build": "astro build && pagefind --site dist",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "astro": "^5.16.0",
+    "marked": "^15.0.0"
+  },
+  "devDependencies": {
+    "pagefind": "^1.6.0"
+  }
+}

@@ -1,0 +1,56 @@
+---
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+const cards = [
+  { t: "第 0 章 · 前置", d: "gstack 是什么、怎么装、三条纪律与两条硬红线", h: `${BASE}/handbook/00/` },
+  { t: "第一篇 · 走一遍八环", d: "A 观察（看演示）/ B 复现（跑镜像）/ C 白手起家（做水果店）", h: `${BASE}/handbook/01/` },
+  { t: "第二篇 · 做一个 AI 应用", d: "判型 → 卡一 RAG 实操 → 卡二卡三入口 → 诚实清单", h: `${BASE}/handbook/02/` },
+  { t: "第三篇 · 搬回自己的课题", d: "判型 / 瘦身 / 造数 / 红线 / 受控行动 / Day-2 / 交卷", h: `${BASE}/handbook/03/` }
+];
+const tools = [
+  { t: "四幕演示页", d: "R1→R3.5 四幕，看八环怎么工作、每幕加了什么", h: `${BASE}/demo/fruitlab` },
+  { t: "水果店起手引导", d: "C 部分：一句话需求 + 四条约束 → 生成起手提示词", h: `${BASE}/wizard/fruitlab` },
+  { t: "提示词向导（三张卡）", d: "RAG / 问数 / 合同，七步填空 → 体检 → 生成", h: `${BASE}/wizard/rag` },
+  { t: "素材与指纹", d: "三套 starter-kit、硬校验值、校验命令", h: `${BASE}/kit` }
+];
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>明州 · AI Coding 实验手册</title>
+    <style is:global>
+      @import "../styles/global.css";
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href={`${BASE}/`}>明州 · AI Coding 实验手册</a>
+      <nav class="topnav">
+        <a href={`${BASE}/handbook/00/`}>正文</a>
+        <a href={`${BASE}/demo/fruitlab`}>演示</a>
+        <a href={`${BASE}/wizard/fruitlab`}>向导</a>
+        <a href={`${BASE}/kit`}>素材</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <h1>打开这个站点，材料就齐了</h1>
+      <p>四份正文 · 一个可交互的四幕演示 · 五个向导 · 三套素材包。目标：学员不需要别的材料就能走完一遍 AI 交付闭环。</p>
+    </section>
+
+    <section class="cards">
+      {cards.map((c) => (
+        <a class="card" href={c.h}><h3>{c.t}</h3><p>{c.d}</p></a>
+      ))}
+    </section>
+
+    <section class="hero" style="padding-top:10px"><h1 style="font-size:22px">动手与素材</h1></section>
+    <section class="cards" style="padding-bottom:20px">
+      {tools.map((c) => (
+        <a class="card" href={c.h}><h3>{c.t}</h3><p>{c.d}</p></a>
+      ))}
+    </section>
+  </body>
+</html>

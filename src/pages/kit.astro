@@ -1,0 +1,28 @@
+---
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>素材与指纹 · 明州 AI Coding 手册</title>
+<style is:global>@import "/src/styles/global.css";</style>
+
+</head><body>
+<header class="top"><a class="brand" href="${BASE}/">明州 · AI Coding 实验手册</a>
+<nav class="topnav"><a href="${BASE}/handbook/00/">正文</a><a href="${BASE}/demo/fruitlab">演示</a>
+<a href="${BASE}/wizard/fruitlab">向导</a><a href="${BASE}/kit">素材</a><a href="${BASE}/search">搜索</a></nav></header>
+<main class="main" style="max-width:900px;margin:0 auto;padding:28px 20px 80px">
+<h1>素材与指纹</h1>
+<p class="lede">三套 starter-kit 是"真做"的起点：只有数据、评估集、契约与校验脚本，不含实现代码。</p>
+<table><thead><tr><th>场景</th><th>包里有什么</th><th>硬校验值（对不上就停手）</th><th>向导</th></tr></thead><tbody>
+<tr><td>卡一 政企知识问答</td><td>12 份制度、manifest、20 题评估集、契约</td><td>文档 12 / 全文 23489 字符 / sha256 <code>094a3376…</code> / 20 题四桶各 5</td><td><a href="${BASE}/wizard/rag">/wizard/rag</a></td></tr>
+<tr><td>卡二 经营数据问数</td><td>6 表 8584 行、语义层、20 题（14+3+3）</td><td>库 sha256 以 <code>d1f5872e</code> 开头 / 三基准值 541252.34·57·35</td><td><a href="${BASE}/wizard/sql">/wizard/sql</a></td></tr>
+<tr><td>卡三 合同合规审查</td><td>30 份合同、27 条规则、60 判定单元、20 锚点</td><td>内容指纹以 <code>7fd9a1f3</code> 开头 / 全量 810 判定单元</td><td><a href="${BASE}/wizard/contract">/wizard/contract</a></td></tr>
+</tbody></table>
+<h2>校验命令</h2><pre><code>python eval/check_starter.py</code></pre>
+<p>全部 PASS 才开工；对不上是数据问题，不是代码问题。</p>
+<h2>下载与打印</h2>
+<ul><li>压缩包体积大，走 <a href="https://github.com/cloudzun/mingzhou/releases" target="_blank" rel="noopener">Releases</a>，不进站点</li>
+<li><a href="${BASE}/demo/fruitlab">四幕演示页</a>（190 KB 单文件，离线可开）</li>
+<li><a href="${BASE}/print">整本打印视图</a>（A4，可直接存 PDF）</li></ul>
+</main>
+</body></html>

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>向导样章 · 经营数据问数 · 启动提示词生成器</title>
+<style>
+  :root{
+    --bg:#f7f6f3; --card:#fff; --ink:#1f2328; --muted:#5b6570;
+    --line:#e3e0d8; --accent:#1f6feb; --ok:#1a7f37; --bad:#c0392b; --warn:#9a6700;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.7 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif;}
+  header{background:#11161d;color:#fff;padding:18px 24px}
+  header h1{margin:0;font-size:19px;letter-spacing:.3px}
+  header p{margin:6px 0 0;color:#9aa7b4;font-size:13.5px}
+  main{max-width:900px;margin:0 auto;padding:24px 20px 80px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin-bottom:16px}
+  h2{margin:0 0 10px;font-size:16.5px}
+  .tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:#eef2f7;color:#41505f;margin-right:6px}
+  .muted{color:var(--muted);font-size:14px}
+  .btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:8px;
+       padding:9px 16px;font-size:14.5px;cursor:pointer}
+  .btn:hover{opacity:.88}
+  .btn.ghost{background:transparent;color:var(--ink)}
+  .btn.small{padding:5px 10px;font-size:13px;border-radius:6px}
+  .btn[disabled]{opacity:.45;cursor:not-allowed}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+  .progress{height:6px;background:#e8e5dd;border-radius:99px;overflow:hidden;margin:4px 0 16px}
+  .progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+  .q-title{font-size:17.5px;font-weight:600;margin:0 0 8px}
+  .help{background:#f4f7fb;border-left:3px solid var(--accent);padding:10px 14px;border-radius:0 8px 8px 0;
+        font-size:14.5px;color:#33414f;margin:0 0 14px}
+  .help b{color:#0f1b28}
+  textarea,input[type=text]{width:100%;font:inherit;padding:10px 12px;border:1px solid #cfd6dd;
+        border-radius:8px;background:#fcfcfb;resize:vertical}
+  textarea:focus,input[type=text]:focus{outline:2px solid #b9d1f7;border-color:var(--accent)}
+  .refbox{background:#f6f4ec;border:1px dashed #cfc7b4;border-radius:8px;padding:12px 14px;
+          font-size:14.5px;margin-top:10px;display:none;white-space:pre-wrap}
+  pre{background:#0f141a;color:#e6edf3;padding:14px 16px;border-radius:8px;overflow:auto;
+      font:13px/1.65 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-word}
+  .tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+  .tab{padding:7px 14px;border:1px solid var(--line);border-radius:8px 8px 0 0;background:#efece5;
+       cursor:pointer;font-size:14px}
+  .tab.on{background:#fff;border-bottom-color:#fff;font-weight:600}
+  .check{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .check:last-child{border-bottom:0}
+  .dot{flex:0 0 18px;height:18px;border-radius:50%;margin-top:4px;font-size:11px;color:#fff;
+       display:flex;align-items:center;justify-content:center}
+  .dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)}
+  .check .body{flex:1;min-width:0}
+  .check .body .t{font-size:14.5px;font-weight:600}
+  .check .body .s{font-size:13.5px;color:var(--muted);margin-top:3px}
+  .sugg{font-size:13.5px;background:#fdf3f2;border-left:3px solid var(--bad);padding:8px 12px;
+        margin-top:8px;border-radius:0 6px 6px 0}
+  ul.diff{margin:0;padding-left:20px}
+  ul.diff li{margin:6px 0;font-size:14.5px}
+  .pill{font-size:12px;padding:1px 7px;border-radius:99px;background:#eef2f7;color:#41505f}
+  .pill.warn{background:#fdf1d8;color:var(--warn)}
+  footer{max-width:900px;margin:0 auto;padding:0 20px 40px;color:var(--muted);font-size:13px}
+  .hidden{display:none}
+  @media (max-width:620px){ main{padding:16px 12px 60px} .card{padding:16px} }
+</style>
+</head>
+<body>
+<header>
+  <h1>向导样章 · 经营数据问数</h1>
+  <p>三种载体之三：把教材里的判断变成"填空 → 生成 → 体检"。全程离线。</p>
+</header>
+
+<main>
+  <!-- ============ 首页 ============ -->
+  <section id="intro" class="card">
+    <div><span class="tag">换一个不了解项目的人接手，他要看到什么才不用重开讨论？</span></div>
+    <h2>你要产出的一样东西：一段可直接交给智能体的启动提示词</h2>
+    <p class="muted">它不是模板填空，而是把你在教材里做的判断落成文字。七步填完，生成提示词，跑一次<b>红线体检</b>——体检不过，别发给智能体。</p>
+        <ul class="muted">
+      <li><b>第 1–2 步</b>：背景与一句话目标（教材 5.3.1：先分清语言、口径、安全三道鸿沟）</li>
+      <li><b>第 3 步</b>：接口——输出必须带三态（答出 / 需澄清 / 拒绝）与轨迹</li>
+      <li><b>第 4 步</b>：技术栈与关键参数——只读连接、LIMIT、超时、纠错次数、表数上限</li>
+      <li><b>第 5 步</b>：数据现状——几张表、多少行、指纹、有哪些刻意埋点</li>
+      <li><b>第 6 步</b>：验收——EX 的分母与比对规则，执行失败算未通过（教材 5.3.4）</li>
+      <li><b>第 7 步</b>：红线与停止条件——写操作一律拒绝、库只读、四个拍板点等你选</li>
+    </ul>
+    <div class="row">
+      <button class="btn" id="startBtn">开始 → 第 1 步</button>
+      <button class="btn ghost" id="initBtn">📋 复制环境初始化提示词（开工前先贴这段）</button>
+      <span class="muted">约 20 分钟｜7 步｜最后自动注入数据、环境与八环节纪律</span>
+    </div>
+  </section>
+
+  <!-- ============ 填表 ============ -->
+  <section id="formView" class="hidden">
+    <div class="card">
+      <div class="progress"><i id="bar"></i></div>
+      <div class="muted" id="stepLabel"></div>
+      <h2 class="q-title" id="qTitle"></h2>
+      <div class="help" id="qHelp"></div>
+      <div id="inputArea"></div>
+      <div class="row">
+        <button class="btn ghost small" id="refBtn">看看这一步的参考答案</button>
+        <button class="btn ghost small" id="prevBtn">← 上一步</button>
+        <span style="flex:1"></span>
+        <button class="btn" id="nextBtn">下一步 →</button>
+      </div>
+      <div class="refbox" id="refBox"></div>
+    </div>
+  </section>
+
+  <!-- ============ 结果 ============ -->
+  <section id="resultView" class="hidden">
+    <div class="card">
+      <h2>第一步 · 红线体检（八项全绿再发出去）</h2>
+      <p class="muted">体检只查"关键判断有没有落成文字"。红项点右侧"补入建议"即可修正。</p>
+      <div id="checkList"></div>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <div class="tab on" data-tab="mine">我的提示词</div>
+        <div class="tab" data-tab="ref">参考提示词</div>
+        <div class="tab" data-tab="diff">差异清单</div>
+      </div>
+      <div id="tabMine"><pre id="mineOut"></pre></div>
+      <div id="tabRef" class="hidden"><pre id="refOut"></pre></div>
+      <div id="tabDiff" class="hidden"><ul class="diff" id="diffList"></ul></div>
+      <div class="row">
+        <button class="btn" id="copyBtn">复制提示词</button>
+        <button class="btn ghost" id="dlBtn">下载 .md</button>
+        <button class="btn ghost" id="backBtn">← 修改</button>
+        <button class="btn ghost" id="resetBtn">重新开始</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    样章说明：本页是"三种载体"里的交互载体。教材（单元 5.3）负责判断与口径，手册负责操作与验收，本页负责把判断变成可直接使用的指令。离线可用，不收集任何数据。
+  </footer>
+</main>
+
+<script>
+/* ===================== 常量：自动注入块 ===================== */
+const DATA_BLOCK = [
+"【素材与硬校验 · 自动注入】",
+"- 库：db/aicoding.db，6 表 8584 行（客户 303 / 产品 36 / 员工 40 / 订单 2000 / 工单 5000 / 账单 1205），seed=20261020，只读使用。",
+"- 硬校验：python eval/check_starter.py → 库 sha256 以 d1f5872e 开头、6 表行数、总行数 8584、三个基准值 541252.34 / 57 / 35。",
+"- 埋点：db/EMBEDDED_CASES.json 10 类（重复客户、地市名不统一、等级空值、退订后仍出账…），是考题不是脏数据。",
+"- 评估集：eval/starter_set.jsonl 20 题（14 可答六种结构 + 3 歧义 + 3 写操作）。"
+].join("\n");
+
+const INIT_PROMPT = [
+"先只做环境准备，不要写业务代码。",
+"",
+"1. 建独立虚拟环境 .venv 并激活；按 requirements.txt 安装依赖（版本已锁，不要升级）。",
+"2. 把 .env.example 复制成 .env，按下表写入配置（键名保持原样）：",
+"   SILICONFLOW_BASE=https://api.siliconflow.cn/v1",
+"   SILICONFLOW_KEY=<我稍后填，先留占位>",
+"   MODEL_MAIN=deepseek-ai/DeepSeek-V3",
+"   DB_PATH=db/aicoding.db",
+"   MAX_ROWS=1000",
+"   QUERY_TIMEOUT_S=10",
+"   MAX_CORRECTION_ATTEMPTS=2",
+"   PORT=4181",
+"3. 跑 python eval/check_starter.py，把完整输出贴给我。",
+"4. 等我填好 SILICONFLOW_KEY 后，做一次生成模型连通自检（发一条最短请求），报告是否返回非空内容。",
+"5. 每一步结束停下汇报。不要改 db/ 与 eval/ 下的任何文件。"
+].join("\n");
+
+const ENV_BLOCK = [
+"【环境】",
+"- Python 3.12.x；建独立 venv；依赖见素材包 requirements.txt（已锁版本）。",
+"- 数据库只读连接：sqlite3.connect(\"file:db/aicoding.db?mode=ro\", uri=True)。",
+"- 配置项全在 .env：SILICONFLOW_BASE / SILICONFLOW_KEY / MODEL_MAIN / DB_PATH / MAX_ROWS / QUERY_TIMEOUT_S / MAX_CORRECTION_ATTEMPTS / PORT。",
+"- 密钥禁止硬编码、禁止写入日志或截图。"
+].join("\n");
+
+const RED_BLOCK = [
+"【红线】",
+"- 写操作（删除/修改/插入/建表）一律拒绝且不执行，返回 rejected.gate = write_intent，rows 必须为空。",
+"- 库必须只读连接（mode=ro），不许用可写连接。",
+"- 不许改 db/ 与 eval/ 下的任何文件；不许为了跑分清洗埋点。",
+"- 结果被 LIMIT 截断时必须显式标注 truncated，且不许用截断后的结果做判分。"
+].join("\n");
+
+const FLOW_BLOCK = [
+"【流程纪律】",
+"1. 依次走完八环节：office-hours → spec → autoplan → build → review → qa → ship → retro，顺序不可跳过、不可打乱。",
+"2. 禁止全自动：每完成一个环节，必须停下汇报该环节产出，得到我的明确许可后才能进入下一环。",
+"3. 四个拍板点必须列出选项与利弊，等我选择后再继续：白名单范围 / LIMIT 与截断 / 纠错次数 / 歧义分级。",
+"4. 每环节产出文件落到当前目录；未达标项写进 known issues，不得写成\"基本达标\"。"
+].join("\n");
+
+/* ===================== 七步定义 ===================== */
+const STEPS = [
+  {
+    key:"bg", type:"textarea", rows:4,
+    q:"第 1 步 · 背景与角色：你是谁，在给谁做？",
+    help:"让智能体知道上下文：<b>我是谁</b>、<b>给谁做</b>、<b>谁在用</b>、<b>上一轮做到哪了</b>。写好后自问：换个人读，能看懂我在为谁做吗？",
+    ph:"例：我是 FDE 施工工程师（Delta），为某省级通信服务企业的经营分析部门做问数。使用者是经营分析与一线主管。",
+    ref:"我是 FDE 团队的施工工程师（Delta 角色），为某省级通信服务企业的经营分析部门施工场景二（经营数据问数）。上一轮已完成需求澄清与技术选型，本轮从零施工。使用者是经营分析与一线主管——他们要的是能对上账的数字，不是 SQL。"
+  },
+  {
+    key:"goal", type:"text",
+    q:"第 2 步 · 要做什么：一句话说清",
+    help:"别写「做一个问数系统」这种空话。要具体到<b>谁、问什么、拿到什么、不能做什么</b>。",
+    ph:"一句话：要交付什么，帮谁解决什么问题，边界在哪。",
+    ref:"做一个经营数据问数系统：输入一句中文问题，输出可核对的 SQL、结果集与图表建议；写操作一律拒绝；口径不清时先反问，不硬答。"
+  },
+  {
+    key:"io", type:"textarea", rows:5,
+    q:"第 3 步 · 输入输出：收到什么，吐出什么？",
+    help:"训练你定义接口。输出不只是 SQL 和结果，还要有<b>三态</b>（答出 / 需澄清 / 拒绝）与<b>轨迹</b>——否则「没答」和「拒绝了」分不开。",
+    ph:"输入：……；输出：sql / columns / rows / row_count / chart / clarification / rejected / metrics_used，状态三态。",
+    ref:"输入：中文问题（口语化，如「2026年9月的应收合计是多少元？」）。\n输出：sql（只读、单语句、≤3 表）、columns / rows / row_count、chart（type/x/y）、clarification（歧义时）、rejected（{gate, reason}）、metrics_used；状态三态：answered / needs_clarification / rejected。"
+  },
+  {
+    key:"tech", type:"textarea", rows:6,
+    q:"第 4 步 · 技术栈与关键参数：用什么、参数怎么定？",
+    help:"案例已定 NL2SQL，所以不问「要不要」。要定的是：<b>框架与库</b>、<b>只读连接</b>、<b>LIMIT/超时/纠错次数/表数上限</b>、<b>语义层覆盖哪些概念</b>，以及<b>实现怎么分工</b>。每条都要写「为什么」与「什么条件下换」。",
+    ph:"框架 …；库 …（只读）；LIMIT …；超时 …；纠错 …；表数 …；语义层覆盖 …；五块分工 …",
+    ref:"技术栈：Python 3.12 + FastAPI；SQLite 只读连接（file:db/aicoding.db?mode=ro）；一家供应商提供生成模型。\n参数：LIMIT 1000 且超限标 truncated；查询超时 10 秒；纠错 ≤2 次且每次重过白名单；表数上限 3。\n语义层：semantic_layer.json 至少覆盖 营收/实收/欠费/折扣后月费/在网/新增订单/SLA 超时/近三个月/千兆专线/高优工单 十个概念。\n分工：理解（意图+歧义）/ 语义层 / 生成 / 闸门与执行 / 服务，文件名自定；先建空壳再逐块填。"
+  },
+  {
+    key:"data", type:"textarea", rows:4,
+    q:"第 5 步 · 数据现状：库什么情况？",
+    help:"语言模型会脑补表结构。必须交代：<b>几张表、多少行、指纹、有哪些刻意埋点</b>。漏了这条，它可能把埋点当脏数据「清洗」掉——那是考题。",
+    ph:"共 … 表 … 行；库在 …；seed/指纹 …；埋点 …；评估集 …",
+    ref:"6 表 8584 行（客户 303 / 产品 36 / 员工 40 / 订单 2000 / 工单 5000 / 账单 1205），db/aicoding.db，seed=20261020，库 sha256 以 d1f5872e 开头；账单挂 order_id 才能对账；库内有 10 类刻意埋点，不要清洗；评估集 eval/starter_set.jsonl 20 题（14 可答 + 3 歧义 + 3 写操作）。"
+  },
+  {
+    key:"accept", type:"textarea", rows:6,
+    q:"第 6 步 · 验收口径：怎么算对、怎么算过？",
+    help:"训练你把验收说死。本场景的核心是 <b>EX</b>：分母、比对规则、执行失败怎么算。别让智能体自己发明一套验收。",
+    ph:"EX＝…；分母 …；比对规则 …；可执行率 …；歧义 …；写操作 …",
+    ref:"EX（执行结果一致率）＝结果集与标准一致的题数 / 14；SQL 执行失败算未通过，不剔除。\n比对规则：列数一致；列顺序与别名无关；有 ORDER BY 才校验前 N 行顺序；浮点容差 0.01；空集=空集；多解 SQL 都接受。\n辅助指标：可执行率 /14、歧义识别率 /3（主动给口径选项才算对）、写操作拒绝 3/3。\n歧义判定：主动指出歧义并给口径选项=correct；直接给一个数字=wrong。"
+  },
+  {
+    key:"bound", type:"textarea", rows:5,
+    q:"第 7 步 · 红线与停止条件：什么不许做、什么时候必须停？",
+    help:"红线决定它不能犯什么；停止条件决定你还有没有把关机会。本场景最贵的一条红线是<b>写操作一律拒绝且不执行</b>。",
+    ph:"不许 …；不许 …；每完成一环必须停下等我确认；拍板点列选项等我选。",
+    ref:"停止条件：每完成一个环节停下汇报，得到我的许可再进下一环；白名单范围、LIMIT 与截断、纠错次数、歧义分级四点必须先列选项等我拍板，不许自行决定。\n另：写操作一律拒绝且不执行（rejected.gate=write_intent，rows 为空）；库只读；不许改 db/ 与 eval/；截断必须标注且不得用于判分。"
+  }
+];
+
+/* ===================== 红线体检 ===================== */
+const CHECKS = [
+  { id:"ex", label:"EX 口径：分母 + 比对规则都写了",
+    test:v => { const t=v.all; return /(EX|执行结果)/.test(t) && /(分母|\/14|14 题)/.test(t) && /(比对|列顺序|容差)/.test(t); },
+    sugg:"EX＝结果集与标准一致的题数 / 14；SQL 执行失败算未通过、不剔除；比对规则：列数一致、列顺序与别名无关、有 ORDER BY 才校验前 N 行、浮点容差 0.01、多解 SQL 都接受。", target:5 },
+  { id:"reject", label:"写操作：一律拒绝且不执行",
+    test:v => { const t=v.all; return /(写操作|删除|修改|插入|建表)/.test(t) && /(拒绝|不执行|不得执行)/.test(t); },
+    sugg:"写操作（删除/修改/插入/建表）一律拒绝且不执行：返回 rejected.gate = write_intent，rows 必须为空。", target:6 },
+  { id:"ro", label:"只读：靠连接保证，不靠提示词",
+    test:v => /(只读|mode=ro|query_only|readonly)/i.test(v.all),
+    sugg:"数据库用只读连接：sqlite3.connect(\"file:db/aicoding.db?mode=ro\", uri=True)；闸不能只写在提示词里。", target:3 },
+  { id:"amb", label:"歧义：先反问还是先作答，写清了",
+    test:v => /(歧义|反问|澄清|clarification)/.test(v.all),
+    sugg:"歧义分两级：有默认口径的提示后作答（advisory）；没有默认口径的先反问（blocking），不硬答。", target:2 },
+  { id:"data", label:"数据现状：表数/行数/指纹/埋点",
+    test:v => { const t=v.all; return /(8584|6 表|六张表)/.test(t) && /(seed|sha|指纹)/.test(t); },
+    sugg:"6 表 8584 行，db/aicoding.db，seed=20261020，库 sha256 以 d1f5872e 开头；库内 10 类刻意埋点不要清洗。", target:4 },
+  { id:"aux", label:"辅助指标：可执行率 / 歧义 / 写拒绝",
+    test:v => /(可执行率|歧义识别|3\/3|写操作拒绝)/.test(v.all),
+    sugg:"辅助指标单列：可执行率 /14、歧义识别率 /3、写操作拒绝 3/3；不并入 EX。", target:5 },
+  { id:"stop", label:"停止条件：一环一停、拍板点等我选",
+    test:v => /(停下|等我|拍板|许可)/.test(v.all),
+    sugg:"每完成一个环节停下汇报，得到许可再进下一环；白名单范围、LIMIT、纠错次数、歧义分级必须列选项等我拍板。", target:6 },
+  { id:"ban", label:"禁止项：不改库、不吃截断数据判分",
+    test:v => /(禁止|不得|不许)/.test(v.all),
+    sugg:"不许改 db/ 与 eval/；不许清洗埋点；截断必须标注 truncated，且不得用截断后的结果做判分。", target:6 }
+];
+
+/* ===================== 状态与渲染 ===================== */
+const state = { i:0, values: STEPS.map(()=> ""), view:"intro" };
+const $ = s => document.querySelector(s);
+
+function show(view){
+  state.view = view;
+  $("#intro").classList.toggle("hidden", view!=="intro");
+  $("#formView").classList.toggle("hidden", view!=="form");
+  $("#resultView").classList.toggle("hidden", view!=="result");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function renderStep(){
+  const st = STEPS[state.i];
+  $("#stepLabel").textContent = `第 ${state.i+1} / ${STEPS.length} 步`;
+  $("#bar").style.width = ((state.i)/STEPS.length*100) + "%";
+  $("#qTitle").textContent = st.q;
+  $("#qHelp").innerHTML = st.help;
+  $("#refBox").style.display = "none";
+  $("#refBox").textContent = "参考答案：\n" + st.ref;
+  const v = state.values[state.i];
+  if (st.type === "text"){
+    $("#inputArea").innerHTML = `<input type="text" id="field" placeholder="${st.ph}">`;
+  } else {
+    $("#inputArea").innerHTML = `<textarea id="field" rows="${st.rows}" placeholder="${st.ph}"></textarea>`;
+  }
+  $("#field").value = v;
+  $("#field").addEventListener("input", e => { state.values[state.i] = e.target.value; });
+  $("#prevBtn").disabled = state.i === 0;
+  $("#nextBtn").textContent = (state.i === STEPS.length-1) ? "生成提示词 →" : "下一步 →";
+  $("#refBtn").textContent = "看看这一步的参考答案";
+  $("#field").focus();
+}
+
+function assemble(values){
+  const v = values;
+  return [
+"请以本项目的施工工程师（Delta 角色）身份，执行本次开发，按下面的背景与约束推进。",
+"",
+"【背景】" + (v[0] || "（未填）"),
+"",
+"【要做什么】" + (v[1] || "（未填）"),
+"",
+"【输入输出】" + (v[2] || "（未填）"),
+"",
+"【技术栈与关键参数】" + (v[3] || "（未填）"),
+
+"",
+"【数据现状】" + (v[4] || "（未填）"),
+"",
+DATA_BLOCK,
+"",
+"【验收口径】" + (v[5] || "（未填）"),
+"",
+"【红线与停止条件】" + (v[6] || "（未填）"),
+"",
+RED_BLOCK,
+"",
+FLOW_BLOCK,
+"",
+ENV_BLOCK,
+"",
+"现在从 office-hours 开始。"
+  ].join("\n");
+}
+
+function refAssemble(){
+  return assemble(STEPS.map(s=>s.ref));
+}
+
+function runChecks(values){
+  const v = { all: values.join("\n"), byStep: values };
+  return CHECKS.map(c => ({ ...c, pass: !!c.test(v) }));
+}
+
+function renderResult(){
+  const mine = assemble(state.values);
+  $("#mineOut").textContent = mine;
+  $("#refOut").textContent = refAssemble();
+
+  // 体检
+  const res = runChecks(state.values);
+  const okCount = res.filter(r=>r.pass).length;
+  const list = $("#checkList");
+  list.innerHTML = "";
+  res.forEach((r, idx) => {
+    const div = document.createElement("div");
+    div.className = "check";
+    div.innerHTML = `
+      <div class="dot ${r.pass?'ok':'bad'}">${r.pass?'✓':'!'}</div>
+      <div class="body">
+        <div class="t">${r.label} <span class="pill ${r.pass?'':'warn'}">${r.pass?'通过':'未通过'}</span></div>
+        ${r.pass ? "" : `
+          <div class="sugg">建议补入：${r.sugg}
+            <div class="row" style="margin-top:8px">
+              <button class="btn small" data-fix="${idx}">补入第 ${r.target+1} 步</button>
+            </div>
+          </div>`}
+      </div>`;
+    list.appendChild(div);
+  });
+  const head = document.createElement("div");
+  head.className = "muted";
+  head.style.marginBottom = "8px";
+  head.textContent = `体检结果：${okCount} / ${res.length} 项通过` + (okCount===res.length ? "（可以发出去）" : "（先补红项再发）");
+  list.prepend(head);
+  list.querySelectorAll("[data-fix]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const c = res[Number(btn.dataset.fix)];
+      const i = c.target;
+      const cur = state.values[i].trim();
+      state.values[i] = cur ? (cur.replace(/[。；;]$/,"") + "；" + c.sugg) : c.sugg;
+      renderResult();
+    });
+  });
+
+  // 差异
+  const diffs = [];
+  STEPS.forEach((s,i)=>{
+    const mineLen = (state.values[i]||"").trim().length;
+    const refLen = s.ref.length;
+    if (mineLen === 0) diffs.push(`<b>${s.q.split("·")[1]}</b>：未填。参考答案 ${refLen} 字。`);
+    else if (mineLen < refLen * 0.55) diffs.push(`<b>${s.q.split("·")[1]}</b>：${mineLen} 字，参考答案 ${refLen} 字 —— 可能漏了关键判断，建议对照。`);
+  });
+  CHECKS.filter(c=>!c.test({all:state.values.join("\n")})).forEach(c=>{
+    diffs.push(`红线未过：<b>${c.label}</b>`);
+  });
+  $("#diffList").innerHTML = diffs.length ? diffs.map(d=>`<li>${d}</li>`).join("") : "<li>各步长度与红线检查均正常。</li>";
+
+  show("result");
+}
+
+/* ===================== 事件 ===================== */
+$("#startBtn").addEventListener("click", ()=>{ show("form"); renderStep(); });
+$("#initBtn").addEventListener("click", async ()=>{
+  const text = INIT_PROMPT;
+  try { await navigator.clipboard.writeText(text); $("#initBtn").textContent = "已复制环境初始化提示词 ✓"; }
+  catch(e){ const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); $("#initBtn").textContent="已复制 ✓";}catch(err){$("#initBtn").textContent="请手动复制";} document.body.removeChild(ta); }
+  setTimeout(()=>{ $("#initBtn").textContent = "📋 复制环境初始化提示词（开工前先贴这段）"; }, 2200);
+});
+$("#nextBtn").addEventListener("click", ()=>{
+  if (state.i < STEPS.length-1){ state.i++; renderStep(); }
+  else { renderResult(); }
+});
+$("#prevBtn").addEventListener("click", ()=>{ if (state.i>0){ state.i--; renderStep(); } });
+$("#refBtn").addEventListener("click", ()=>{
+  const box = $("#refBox");
+  const open = box.style.display === "block";
+  box.style.display = open ? "none" : "block";
+  $("#refBtn").textContent = open ? "看看这一步的参考答案" : "收起参考答案";
+});
+$("#backBtn").addEventListener("click", ()=>{ state.i = 0; show("form"); renderStep(); });
+$("#resetBtn").addEventListener("click", ()=>{
+  state.values = STEPS.map(()=> "");
+  state.i = 0; show("intro");
+});
+document.querySelectorAll(".tab").forEach(t=>{
+  t.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on", x===t));
+    ["mine","ref","diff"].forEach(k=>{
+      document.getElementById("tab"+k[0].toUpperCase()+k.slice(1)).classList.toggle("hidden", k!==t.dataset.tab);
+    });
+  });
+});
+$("#copyBtn").addEventListener("click", async ()=>{
+  const text = $("#mineOut").textContent;
+  try { await navigator.clipboard.writeText(text); $("#copyBtn").textContent = "已复制 ✓"; }
+  catch(e){
+    const ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); $("#copyBtn").textContent = "已复制 ✓"; }
+    catch(err){ $("#copyBtn").textContent = "请手动全选复制"; }
+    document.body.removeChild(ta);
+  }
+  setTimeout(()=>{ $("#copyBtn").textContent = "复制提示词"; }, 1800);
+});
+$("#dlBtn").addEventListener("click", ()=>{
+  const blob = new Blob([$("#mineOut").textContent], {type:"text/markdown;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "启动提示词-政企制度问答.md";
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1500);
+});
+</script>
+</body>
+</html>

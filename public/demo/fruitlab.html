@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GStack 八环 · FruitLab 四阶段开发过程</title>
+<style>
+:root{
+  /* 五色沿用教材 Mermaid 的 classDef 配色，保持体系一致 */
+  --blue:#eaf3fd;   --blue-s:#1976d2;  --blue-d:#0f3f6d;
+  --green:#e9f5ea;  --green-s:#2e7d32; --green-d:#1b4332;
+  --red:#fdecea;    --red-s:#d94f4f;   --red-d:#5c1d1d;
+  --warm:#f7efe3;   --warm-s:#a8895f;  --warm-d:#4a3525;
+  --gray:#f1f3f6;   --gray-s:#8a95a5;  --gray-d:#33383d;
+  --indigo:#eceefb; --indigo-s:#5c6bc0;--indigo-d:#2b3468;
+
+  --ink:#141b26; --ink-2:#46536b; --ink-3:#7d8a9d;
+  --line:#e4e9f0; --line-2:#eef1f6;
+  --bg:#fbfcfe; --card:#fff;
+
+  --sh-1:0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.05);
+  --sh-2:0 4px 14px -4px rgba(16,24,40,.10), 0 2px 6px -2px rgba(16,24,40,.06);
+  --sh-3:0 14px 36px -14px rgba(16,24,40,.20);
+
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans CJK SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --r-sm:8px; --r-md:12px; --r-lg:16px;
+  --accent:var(--blue-s);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(1200px 420px at 50% -160px, #f2f7fd 0%, rgba(242,247,253,0) 70%),
+    var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:15.5px;
+  line-height:1.76;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+.wrap{max-width:1160px;margin:0 auto;padding:0 28px}
+
+/* ---------------- 页头 ---------------- */
+header{
+  position:sticky;top:0;z-index:60;
+  background:rgba(255,255,255,.86);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);
+  backdrop-filter:saturate(180%) blur(14px);
+  border-bottom:1px solid var(--line);
+}
+.hd{display:flex;align-items:center;gap:14px;padding:15px 0;flex-wrap:wrap}
+.brand{font-weight:680;font-size:15.5px;letter-spacing:-.01em;display:flex;align-items:center;gap:11px}
+.brand::before{
+  content:"";width:22px;height:22px;border-radius:7px;flex-shrink:0;
+  background:linear-gradient(140deg,var(--blue-s),#4f9ee0 55%,#8ec5ea);
+  box-shadow:0 2px 6px -1px rgba(25,118,210,.45), inset 0 1px 0 rgba(255,255,255,.35);
+}
+.brand small{
+  display:block;font-weight:450;font-size:11.5px;color:var(--ink-3);
+  letter-spacing:.02em;margin-top:1px;
+}
+.brand>span{display:block}
+.hd-meta{
+  margin-left:auto;font-size:11.5px;color:var(--ink-3);font-family:var(--mono);
+  background:var(--gray);border:1px solid var(--line-2);
+  padding:4px 10px;border-radius:20px;
+}
+
+/* ---------------- 时间轴 ---------------- */
+.axis{padding:52px 0 4px}
+.axis h1{
+  font-size:27px;margin:0 0 10px;font-weight:700;letter-spacing:-.022em;
+  line-height:1.32;
+}
+.axis .sub{color:var(--ink-2);font-size:14.5px;margin:0 0 36px;max-width:720px;line-height:1.78}
+
+.track{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;position:relative}
+.track::before{
+  content:"";position:absolute;left:6px;right:6px;top:27px;height:2px;z-index:0;
+  background:linear-gradient(90deg,#cfe0f2,#d9e6dd 34%,#ecdfcb 66%,#d6dbf0);
+  border-radius:2px;
+}
+.stop{position:relative;z-index:1;cursor:pointer;border:none;background:none;padding:0;text-align:left;font:inherit;color:inherit;border-radius:var(--r-md);}
+.stop .dot{
+  width:15px;height:15px;border-radius:50%;background:#fff;
+  border:3px solid var(--accent);margin:20px 0 15px;
+  transition:transform .18s cubic-bezier(.34,1.4,.64,1), box-shadow .18s, background .18s;
+  box-shadow:0 0 0 4px rgba(255,255,255,.9);
+}
+.stop:hover .dot{transform:scale(1.2)}
+.stop[data-active="true"] .dot{
+  background:var(--accent);transform:scale(1.16);
+  box-shadow:0 0 0 4px rgba(255,255,255,.95), 0 0 0 8px rgba(25,118,210,.10);
+}
+.stop .ver{font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.02em}
+.stop .name{font-weight:680;font-size:16.5px;margin:2px 0 4px;letter-spacing:-.01em;transition:color .16s}
+.stop .tag{font-size:13px;color:var(--ink-2);line-height:1.62}
+.stop[data-active="true"] .name{color:var(--accent)}
+.stop:nth-child(1){--accent:#1976d2}
+.stop:nth-child(2){--accent:#2e7d32}
+.stop:nth-child(3){--accent:#a8895f}
+.stop:nth-child(4){--accent:#5c6bc0}
+.stop:focus-visible{outline:2px solid var(--blue-s);outline-offset:6px}
+
+/* ---------------- 跑道 ---------------- */
+.lane{padding:40px 0 6px}
+.lane-hd{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+.lane-hd h2{font-size:19px;margin:0;font-weight:690;letter-spacing:-.015em}
+.lane-hd .note{
+  font-size:11.5px;color:var(--ink-3);font-family:var(--mono);
+  background:var(--gray);border:1px solid var(--line-2);padding:2px 9px;border-radius:20px;
+}
+.lane-note{font-size:13.5px;color:var(--ink-2);margin:0 0 20px;max-width:820px}
+.lane-note code{font-family:var(--mono);font-size:12px;background:var(--gray);padding:1px 6px;border-radius:5px;color:var(--ink)}
+
+.rings{display:grid;grid-template-columns:repeat(8,1fr);gap:10px}
+.ring{
+  position:relative;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r-md);padding:15px 12px 13px;cursor:pointer;text-align:left;
+  font:inherit;color:inherit;box-shadow:var(--sh-1);
+  transition:border-color .18s, box-shadow .18s, transform .18s;
+  overflow:hidden;
+  display:flex;flex-direction:column;min-height:132px;
+}
+.ring .nm{min-height:2.76em}
+.ring::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--accent);opacity:0;transition:opacity .18s;
+}
+.ring:hover{border-color:#cfdbea;box-shadow:var(--sh-2);transform:translateY(-2px)}
+.ring:hover::before{opacity:.55}
+.ring[data-active="true"]{
+  border-color:var(--accent);box-shadow:var(--sh-2), 0 0 0 3px rgba(25,118,210,.09);
+}
+.ring[data-active="true"]::before{opacity:1}
+.ring[data-empty="true"]{opacity:.4;cursor:default;box-shadow:none}
+.ring[data-empty="true"]:hover{transform:none;box-shadow:none;border-color:var(--line)}
+.ring[data-empty="true"]:hover::before{opacity:0}
+.ring:focus-visible{outline:2px solid var(--blue-s);outline-offset:2px}
+.ring .n{
+  font-family:var(--mono);font-size:10px;color:var(--ink-3);
+  letter-spacing:.06em;text-transform:uppercase;
+}
+.ring .nm{font-weight:640;font-size:13px;margin:3px 0 5px;line-height:1.38;letter-spacing:-.005em}
+.ring .sk{font-family:var(--mono);font-size:10.5px;color:var(--blue-s);word-break:break-all;line-height:1.45}
+.ring .badge{margin-top:auto;padding-top:9px;align-self:flex-start}
+
+/* ---------------- 徽章 ---------------- */
+.badge,.sem,.st{
+  display:inline-block;font-family:var(--mono);font-size:10px;line-height:1.6;
+  padding:1px 8px;border-radius:20px;border:1px solid;letter-spacing:.01em;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6);
+}
+.b-pass{background:var(--green);border-color:#b7dfb9;color:var(--green-d)}
+.b-fail{background:var(--red);border-color:#f2c3c0;color:var(--red-d)}
+.b-na{background:var(--warm);border-color:#e3d2b8;color:var(--warm-d)}
+.b-info{background:var(--gray);border-color:#dde2ea;color:var(--gray-d)}
+.b-synth{background:var(--indigo);border-color:#c3c9ee;color:var(--indigo-d);margin-left:4px}
+
+/* ---------------- 详情容器 ---------------- */
+.detail{margin:44px 0 0;border-top:1px solid var(--line);padding-top:34px}
+.dt-hd{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.dt-hd h3{font-size:22px;margin:0;font-weight:700;letter-spacing:-.02em}
+.dt-hd .skillset{
+  font-family:var(--mono);font-size:11.5px;color:var(--blue-d);
+  background:var(--blue);border:1px solid #c9e0f5;border-radius:6px;
+  padding:3px 10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.7);
+}
+.dt-hd .src{margin-left:auto;font-size:11.5px;color:var(--ink-3);font-family:var(--mono)}
+.dt-lead{color:var(--ink-2);font-size:14.5px;margin:0 0 22px;max-width:860px;line-height:1.8}
+
+/* ---------------- 「这一步的关键」 ---------------- */
+.keyline{
+  margin:0 0 24px;padding:18px 22px 19px;
+  background:linear-gradient(135deg,#fdfaf4 0%,#faf4e9 100%);
+  border:1px solid #e9dcc6;border-left:4px solid var(--warm-s);
+  border-radius:var(--r-md);box-shadow:var(--sh-1);
+}
+.keyline-hd{
+  font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--warm-s);margin-bottom:9px;display:flex;align-items:center;gap:8px;
+}
+.keyline-hd::before{
+  content:"";width:14px;height:14px;border-radius:50%;flex-shrink:0;
+  border:2px solid var(--warm-s);background:radial-gradient(circle at 50% 50%,var(--warm-s) 34%,transparent 36%);
+}
+.keyline .md{font-size:15px;color:var(--warm-d);line-height:1.8}
+.keyline .md strong{color:#33251a;font-weight:670}
+
+/* ---------------- 内容块 ---------------- */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.block{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);
+  padding:19px 21px;box-shadow:var(--sh-1);
+}
+.block.wide{grid-column:1/-1}
+.block>h4{
+  margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);
+  display:flex;align-items:center;gap:8px;
+}
+.block>h4::before{
+  content:"";width:3px;height:13px;border-radius:2px;background:var(--blue-s);flex-shrink:0;
+}
+
+/* ---------------- 分区提示 ---------------- */
+.prompt-block{border-left:3px solid var(--blue-s)}
+.prompt-block>h4::before{background:var(--blue-s)}
+.prompt-block .prompt-title{font-size:15px;font-weight:660;color:var(--ink);margin:0 0 11px;line-height:1.5}
+.prompt-block .prompt-src{
+  margin-top:13px;font-size:11px;color:var(--ink-3);font-family:var(--mono);
+  border-top:1px dashed var(--line);padding-top:10px;
+}
+.handoff-block{border-left:3px solid var(--warm-s);background:linear-gradient(180deg,#fffdfa,#fff)}
+.handoff-block>h4::before{background:var(--warm-s)}
+
+.start-hint{
+  margin:26px 0 8px;padding:15px 20px;
+  background:linear-gradient(135deg,#f0f7fe,#e9f3fd);
+  border:1px solid #cfe3f7;border-radius:var(--r-md);
+  font-size:14px;color:var(--blue-d);display:flex;align-items:center;gap:11px;flex-wrap:wrap;
+  box-shadow:var(--sh-1);
+}
+.start-hint .arrow{
+  font-size:16px;font-weight:700;color:var(--blue-s);
+  width:22px;height:22px;border-radius:50%;background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid #cfe3f7;flex-shrink:0;
+}
+
+/* ---------------- 这一轮的结果 ---------------- */
+.roundup{margin-top:44px;border-top:1px dashed var(--line);padding-top:24px}
+.roundup-hd{
+  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:13px;
+}
+.roundup-toggle{
+  display:block;width:100%;text-align:left;background:var(--card);
+  border:1px solid var(--line);border-radius:var(--r-md);padding:15px 20px;
+  font:inherit;font-size:14px;color:var(--ink-2);cursor:pointer;margin-bottom:13px;
+  box-shadow:var(--sh-1);transition:border-color .18s,color .18s,box-shadow .18s;
+}
+.roundup-toggle:hover{border-color:#cfdbea;color:var(--blue-s);box-shadow:var(--sh-2)}
+.roundup-toggle::before{content:"\25B8";color:var(--blue-s);margin-right:9px;display:inline-block;transition:transform .18s}
+.roundup[data-open="true"] .roundup-toggle::before{transform:rotate(90deg)}
+
+/* ---------------- 表格与正文 ---------------- */
+.md{font-size:14.5px;color:var(--ink-2);line-height:1.78}
+.md p{margin:0 0 10px}
+.md p:last-child{margin-bottom:0}
+.md ul,.md ol{margin:0 0 10px;padding-left:21px}
+.md li{margin:3px 0}
+.md strong{color:var(--ink);font-weight:660}
+.md em{font-style:normal;color:var(--ink-3)}
+.md code{
+  font-family:var(--mono);font-size:12px;background:#f2f5f9;
+  border:1px solid var(--line-2);padding:1px 6px;border-radius:5px;color:var(--ink);
+}
+.md a{color:var(--blue-s);text-decoration:none;border-bottom:1px solid rgba(25,118,210,.25)}
+.md a:hover{border-bottom-color:var(--blue-s)}
+
+.md table{
+  border-collapse:separate;border-spacing:0;width:100%;font-size:13px;
+  margin:12px 0;border:1px solid var(--line);border-radius:var(--r-sm);
+  overflow:hidden;box-shadow:var(--sh-1);
+}
+.md th,.md td{
+  border-bottom:1px solid var(--line-2);padding:9px 12px;
+  text-align:left;vertical-align:top;line-height:1.65;
+}
+.md th{
+  background:#f6f8fb;font-weight:660;color:var(--ink);font-size:12px;
+  letter-spacing:.01em;white-space:nowrap;
+}
+.md tbody tr:nth-child(even) td{background:#fbfcfe}
+.md tbody tr:last-child td{border-bottom:none}
+.md tbody tr:hover td{background:#f7fafd}
+
+.md pre{
+  background:#f7f9fc;border:1px solid var(--line);border-left:3px solid var(--gray-s);
+  border-radius:var(--r-sm);padding:13px 15px;overflow-x:auto;
+  font-size:12.5px;line-height:1.68;margin:11px 0;
+}
+.md pre code{background:none;border:none;padding:0}
+.md blockquote{
+  margin:11px 0;padding:10px 15px;
+  border-left:3px solid var(--warm-s);background:linear-gradient(90deg,#fdfbf7,#fefdfb);
+  color:var(--ink-2);font-size:14px;border-radius:0 var(--r-sm) var(--r-sm) 0;
+}
+.md blockquote p:last-child{margin-bottom:0}
+.md h5,.md .sub-h{
+  font-size:14px;margin:18px 0 9px;font-weight:660;color:var(--ink);
+  padding-bottom:6px;border-bottom:1px solid var(--line-2);letter-spacing:-.005em;
+}
+.md hr{border:none;border-top:1px solid var(--line);margin:16px 0}
+
+/* ---------------- 门禁 ---------------- */
+.gates{display:flex;flex-direction:column;gap:8px}
+.gate{
+  display:flex;gap:11px;align-items:flex-start;font-size:13px;
+  padding:9px 12px;border-radius:var(--r-sm);
+  background:#fbfcfe;border:1px solid var(--line-2);
+}
+.gate .sem{flex-shrink:0;margin-top:1px}
+.gate .txt{color:var(--ink-2);line-height:1.62}
+
+/* ---------------- 诚实清单 ---------------- */
+.honest{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;margin-top:2px}
+.honest th,.honest td{
+  border-bottom:1px solid var(--line-2);padding:9px 12px;
+  text-align:left;vertical-align:top;line-height:1.62;
+}
+.honest th{
+  background:#f6f8fb;font-weight:660;font-size:11px;color:var(--ink-3);
+  text-transform:uppercase;letter-spacing:.07em;
+}
+.honest tbody tr:last-child td{border-bottom:none}
+.honest tbody tr:hover td{background:#fbfcfe}
+.honest .st{white-space:nowrap}
+
+/* ---------------- 折叠 ---------------- */
+details.more{margin:13px 0 0;border-top:1px dashed var(--line);padding-top:10px}
+details.more>summary{
+  cursor:pointer;font-size:12.5px;color:var(--blue-s);list-style:none;
+  padding:4px 0;user-select:none;font-weight:520;
+}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"\25B8";font-size:10px;margin-right:7px;display:inline-block;transition:transform .18s}
+details.more[open]>summary::before{transform:rotate(90deg)}
+details.more>summary:hover{text-decoration:underline}
+details.more .more-body{margin-top:10px;padding-top:11px;border-top:1px solid var(--line-2)}
+
+/* ---------------- 其他 ---------------- */
+.src-note{
+  font-size:11.5px;color:var(--ink-3);font-family:var(--mono);
+  margin:-8px 0 22px;padding:8px 13px;background:#f8fafc;
+  border-left:2px solid var(--line);border-radius:0 5px 5px 0;
+}
+.src-note code{background:var(--gray);padding:1px 6px;border-radius:4px}
+
+.empty{padding:70px 0;text-align:center;color:var(--ink-3);font-size:14px}
+
+footer{
+  margin:64px 0 0;border-top:1px solid var(--line);padding:26px 0 56px;
+  font-size:12px;color:var(--ink-3);line-height:1.75;
+}
+footer code{font-family:var(--mono);background:var(--gray);padding:1px 5px;border-radius:4px}
+
+:focus-visible{outline:2px solid var(--blue-s);outline-offset:2px;border-radius:4px}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+  html{scroll-behavior:auto}
+}
+
+/* ---------------- 响应式 ---------------- */
+@media (max-width:1040px){
+  .rings{grid-template-columns:repeat(4,1fr)}
+  .grid2{grid-template-columns:1fr}
+}
+@media (max-width:700px){
+  .wrap{padding:0 18px}
+  .track{grid-template-columns:1fr 1fr;gap:12px}
+  .track::before{display:none}
+  .rings{grid-template-columns:repeat(2,1fr)}
+  .axis{padding:34px 0 4px}
+  .axis h1{font-size:22px}
+  .dt-hd .src{display:none}
+  .block{padding:16px 17px}
+}
+
+@media print{
+  header,.track,.roundup-toggle,details.more>summary{display:none}
+  body{background:#fff;font-size:11pt}
+  .block,.keyline{box-shadow:none;break-inside:avoid}
+  details.more{border-top:none}
+  details.more .more-body{display:block}
+}
+
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap hd">
+    <div class="brand">GStack 八环 · 四阶段开发过程
+      <small>FruitLab R1 → R2 → R3 → R3.5</small>
+    </div>
+    <div class="hd-meta" id="genAt"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="axis">
+    <h1>四幕：同一套八环，四次真实跑</h1>
+    <p class="sub">从纯浏览器端的 MVP，到 Postgres + 容器 + 公开镜像。每一幕都是真实跑完的，产物与证据全部落盘。点任一阶段看它的八环；点任一环看这一环在判断什么。</p>
+    <div class="track" id="track"></div>
+  </section>
+
+  <section class="lane">
+    <div class="lane-hd">
+      <h2 id="laneTitle">八环跑道</h2>
+      <span class="note" id="laneNote"></span>
+    </div>
+    <p class="lane-note" id="laneDesc"></p>
+    <div class="rings" id="rings"></div>
+  </section>
+
+  <section id="detail"></section>
+</main>
+
+<footer class="wrap">
+  <div id="footSrc"></div>
+</footer>
+
+<script type="application/json" id="payload">{"generated_at":"2026-10-19T18:34:48","source_dir":"C:\\Users\\cheng\\OneDrive - CloudZun Studio\\Project\\2026 年度项目\\20261008 明州AICoding\\通用AI_Coding课程与教材\\demo-process","canonical_rings":[{"ring":1,"en":"office-hours","zh":"需求诊断","skill":"/office-hours"},{"ring":2,"en":"spec","zh":"规格定型","skill":"/spec"},{"ring":3,"en":"autoplan","zh":"四方评审","skill":"/autoplan"},{"ring":4,"en":"build","zh":"受控施工","skill":"Build"},{"ring":5,"en":"review","zh":"结构排雷与安全审计","skill":"/review + /cso"},{"ring":6,"en":"qa","zh":"实机探索","skill":"/qa"},{"ring":7,"en":"ship","zh":"发布","skill":"/ship"},{"ring":8,"en":"retro","zh":"量化复盘","skill":"/retro + /learn"}],"stages":[{"id":"R1","version":"1.0.0.0","order":1,"tagline":"八环从零做出一个能跑的最小水果电商","partial":false,"source_file":"R1/R1-八环讲解记录.md","brief_title":"零、起点：一句话需求","brief":"**全部工作从这句话开始：**\n\n> 用 GStack 八环做一个卖水果的电商网站原型，10 种水果能浏览、能下单、订单能查到，不用数据库，做一个简单的 demo 用例。\n\n**这句话被补充了四条执行约束：**\n\n| # | 约束 | 讲课时要强调的点 |\n|---|---|---|\n| 1 | 八环依次走完，顺序不可跳过、不可打乱，每步严格按对应技能执行 | 流程本身是纪律，不是建议 |\n| 2 | 每环产出对应文件并落盘 | 每环都必须留下可检查的实物 |\n| 3 | **禁止全自动执行**：每环之间停下汇报，得到许可才流转 | 这是整节最关键的约束，见下文 |\n| 4 | 需要拍板的决策点必须列出选项与利弊，等人选择 | 人和 AI 的分工边界 |\n\n**关于第 1 条的一个真实数据**：八环的规模极不均衡。画完整个流程需要四到五小时，其中第 3 环（四方评审）单独就占约一小时。\n\n---","summary":"> **一句话需求进得去，可运行的应用和一套可追溯的记录出得来。**\n>\n> 八环里没有一个环节是\"AI 自己说了算\"：\n> **office-hours** 先问清目标和边界，并承认一个未验证的假设；\n> **spec** 把需求钉成可验收的规格，并在两个地方驳回了不合规的动作；\n> **autoplan** 让四个视角轮流挑刺，四个都没通过，但问题全部记录在案；\n> **build** 照规格施工，并自报 5 个问题；\n> **review** 抓到真实缺陷、区分自动修与待决策，并且**判定一个 CRITICAL 不修**；\n> **qa** 在真实浏览器里走一遍，给出 98 分同时写明它的成立条件；\n> **ship** 被一道门禁拦下，改走发布分支；\n> **retro** 用真实 Git 历史做量化复盘。\n>\n> **流程的价值不在\"自动完成\"，而在每个环节都能指出来：这一步做了什么判断、依据是什么、留下了什么。**\n\n---","overview":[["1 office-hours","OFFICE_HOURS.md + 设计文档","126 + 387"],["2 spec","SPEC.md","477"],["3 autoplan","DECISIONS.md","206"],["4 build","代码 + 测试 + BUILD.md","61"],["5 review","review.md","185"],["6 qa","qa-report.md","205"],["7 ship","VERSION + CHANGELOG.md","27"],["8 retro","retro.md","208"]],"gate_matrix":[],"honest_list":[{"item":"教学价值验证（P5）","status":"UNVERIFIED","reason":"无真实受试者","semantic":"UNVERIFIED"},{"item":"人工浏览器逐项验收","status":"UNVERIFIED","reason":"无人工签署","semantic":"UNVERIFIED"},{"item":"跨模型外部评审","status":"unavailable","reason":"自定义端点未配置模型","semantic":"unavailable"},{"item":"推送 / PR / 远端部署","status":"requires-remote","reason":"仓库无远端","semantic":"requires-remote"},{"item":"回归证明","status":"base_unavailable","reason":"基线控制项不可用","semantic":"unavailable"},{"item":"证据索引入口 404","status":"未修复","reason":"已知，记入 Links 扣分","semantic":"info"},{"item":"空白查询结果面板","status":"未修复","reason":"Low，记为已知问题","semantic":"info"},{"item":"无障碍完整 WCAG 验收","status":"仅临时评分","reason":"未做读屏人工审查","semantic":"info"}],"extras":"## 十、全程决策分工汇总\n\n这是整节课的落点：**哪些是 AI 做的，哪些必须人做。**\n\n| 类别 | 例子 | 谁定 |\n|---|---|---|\n| 机械型 | 补 `--port` 空值校验、删行尾空行、补测试 | **AI 自主处理** |\n| 需要权衡但可推荐 | 测试策略、购物车持久化、损坏订单处理 | **AI 出选项，人拍板** |\n| 品味型 | 视觉方向（手写果摊招牌） | **人拍板**（AI 只推荐） |\n| 前提与诚实性 | 教学价值记 `UNVERIFIED`、不编造人工记录 | **人拍板，且必须坚持** |\n| 范围判断 | CRITICAL 缺陷因规格已排除而不修 | **人拍板** |\n| 规格变更 | Node 版本 18+ 改为 22+ | **人拍板，且必须留痕** |\n| 分类纠错 | 驳回被改的状态命名、驳回编造的跳门理由 | **人必须介入** |\n\n**贯穿全程的一条线**：**\"禁止全自动执行\"这条约束不是形式。** 八环里每一次停下，都是因为存在一个\"只有人能负责\"的判断。\n\n---\n\n## 附录：四阶段评审 FAIL 对项目的影响\n\n| 项 | 结果 |\n|---|---|\n| 发现项总数 | 43 条 |\n| 转为施工义务 | **38 条**（其余转给人，或明确不改范围） |\n| 义务实测落实 | **落实 29 / 部分落实 7 / 未见 2** |\n\n**机制**：评审结论保持 FAIL 不变，发现项转为必须落实的义务带进施工。`DECISIONS.md` 原文：\n\n> Accepted fixes do not convert a failed review into a pass.\n\n**实际影响**：\n\n- **功能层是真落实的**——核心闭环、状态机冻结、服务安全边界都有实现和测试，不是纸面文章。\n- **掉的是两类**：**证据包**（逐文件哈希与拷贝清单从未生成，4 个证据链接返回 404）与**契约冻结**（契约文档与分支矩阵未产出，只实现了行为）。\n- **一处具体延迟**：F6（Node 版本）在 autoplan 被接受为义务，但规格冻结在前、义务产生在后，没有机制写回规格，版本不一致多活两个环节，直到第 5 环才修订。\n\n**根因**：追溯链只对规格、不对义务——`BUILD.md` 的验收表照 `SPEC.md` 做。行为类义务落点在代码里，顺手就做了；文档类义务没有落点，就掉了。那 4 个失效链接被 build、review、qa 各自发现一次，三环都没修。\n\n**需要注意的一点**：这个 demo 的卖点是\"可追溯\"，而恰恰是\"证据包\"这项义务没做。\n\n详细逐条核查见 `R1-义务覆盖率核查.md`。","handoff":null,"prompt":{"kind":"一句话需求","title":"起点：一句话需求","body":"**全部工作从这句话开始：**\n\n> 用 GStack 八环做一个卖水果的电商网站原型，10 种水果能浏览、能下单、订单能查到，不用数据库，做一个简单的 demo 用例。\n\n**这句话被补充了四条执行约束：**\n\n| # | 约束 | 讲课时要强调的点 |\n|---|---|---|\n| 1 | 八环依次走完，顺序不可跳过、不可打乱，每步严格按对应技能执行 | 流程本身是纪律，不是建议 |\n| 2 | 每环产出对应文件并落盘 | 每环都必须留下可检查的实物 |\n| 3 | **禁止全自动执行**：每环之间停下汇报，得到许可才流转 | 这是整节最关键的约束，见下文 |\n| 4 | 需要拍板的决策点必须列出选项与利弊，等人选择 | 人和 AI 的分工边界 |\n\n**关于第 1 条的一个真实数据**：八环的规模极不均衡。画完整个流程需要四到五小时，其中第 3 环（四方评审）单独就占约一小时。\n\n---","source":"R1/R1-八环讲解记录.md"},"rings":[{"canonical_ring":1,"stage_ring_no":1,"label":"office-hours","en":"office-hours","zh":"需求诊断","skill":"/office-hours","lead":"","inputs":"**全部工作从这句话开始：**\n\n> 用 GStack 八环做一个卖水果的电商网站原型，10 种水果能浏览、能下单、订单能查到，不用数据库，做一个简单的 demo 用例。\n\n**这句话被补充了四条执行约束：**\n\n| # | 约束 | 讲课时要强调的点 |\n|---|---|---|\n| 1 | 八环依次走完，顺序不可跳过、不可打乱，每步严格按对应技能执行 | 流程本身是纪律，不是建议 |\n| 2 | 每环产出对应文件并落盘 | 每环都必须留下可检查的实物 |\n| 3 | **禁止全自动执行**：每环之间停下汇报，得到许可才流转 | 这是整节最关键的约束，见下文 |\n| 4 | 需要拍板的决策点必须列出选项与利弊，等人选择 | 人和 AI 的分工边界 |\n\n**关于第 1 条的一个真实数据**：八环的规模极不均衡。画完整个流程需要四到五小时，其中第 3 环（四方评审）单独就占约一小时。\n\n---","analysis":"**先是 2 个前置决策：**\n\n| 决策点 | 问题 | 选择 | 依据 |\n|---|---|---|---|\n| D1 | 是否加项目级路由规则 | **加**（新增 `CLAUDE.md`） | 本次固定走八环，稳定路由能降低误调用风险 |\n| D2 | 项目按哪种目标模式推进 | **Hackathon / demo** | 原话是\"原型\"\"简单 demo\" |\n\nD2 共有 6 个选项（创业 / 内部立项 / Hackathon演示 / 开源研究 / 学习 / 好玩）。**选错会让整轮追问跑偏**：选\"创业\"会追问市场和付费证据，把 demo 变成市场验证任务。\n\n**然后是 6 个创作与前提问题（Q1 至 Q6）：**\n\n| 问题 | 回答要点 |\n|---|---|\n| Q1 最酷的版本是什么 | 两件事同时成立：闭环真能跑，过程真可查。不要花哨动效 |\n| Q2 最想给谁看 | 学员。打动点是**流程真的挡过东西**，不是页面 |\n| Q3 最快可分享路径 | 拷到干净目录能独立跑；**明确排除**数据库、身份、后台、部署 |\n| Q4 最接近的现成方案 | 普通水果商城教学仓库；差异是多一层证据链 |\n| **Q5 有没有观察过真实学员** | **没有** |\n| Q6 三年后更必要还是更可替代 | **更可替代** |\n\n**Q5 和 Q6 是这一环最有讲课价值的地方。**\n\nQ5 是**前提挑战**。诚实回答\"没有观察过\"之后，它把\"学员能理解门禁价值\"记为**未验证假设**，而不是当成结论。**这一条后来贯穿全程**：第 4 环、第 5 环、第 6 环都继续记 `UNVERIFIED`，没有任何一环把它悄悄升级成\"已验证\"。\n\nQ6 逼出一个诚实判断：**这个包的护城河不深**。它把产品定位锁定为\"教学演示物\"，而不是\"可防御的产品\"。**这个判断直接决定了后面所有环节都不该过度设计。**","decisions":"| 方案 | 内容 | 代价 |\n|---|---|---|\n| **A 最小可信证据包（选定）** | 静态页面加本地存储，配固定启动说明与证据索引 | 证据链靠人工阅读 |\n| B 自动校验证据链 | 加机器可读清单与校验脚本 | 多一层脚本维护，注意力从教学转向工具 |\n| C 交互式流程回放 | 加可视化教学面板 | 最偏离最小交付，容易变成\"演示 UI 本身\" |\n\n**这里第一次体现\"禁止全自动\"**：它做完六问就停下，把三个方案连同利弊摆出来，等人选。","gate_outputs":"- 方案获批后生成设计文档，**做了 3 轮对抗式审查：通过，质量分 8/10**\n- 完成状态 `DONE_WITH_CONCERNS`，保留 4 条非阻断建议\n- 产出 `OFFICE_HOURS.md`（126 行）+ 设计文档（387 行）","takeaway":"**\"一句话需求进得去，可开工的规格出得来。\"** 关键是它没有直接开工，而是先问清了目标模式、受众、边界，并且**如实承认了一个自己没验证过的假设**。\n\n---","extras":"","gate_results":[]},{"canonical_ring":2,"stage_ring_no":2,"label":"spec","en":"spec","zh":"规格定型","skill":"/spec","lead":"","inputs":"设计文档（方案 A）。","analysis":"分阶段把设计精炼为规格。中途遇到 3 个技术决策点：\n\n| 决策点 | 问题 | 选择 | 被否的选项 |\n|---|---|---|---|\n| D1 | 测试证据做到哪一层 | **内置 `node:test` + 手工浏览器清单** | 全靠手点（证据太弱）／ 引入 Playwright（**违反零依赖**） |\n| D2 | 购物车刷新后是否保留 | **仅内存** | localStorage / sessionStorage（都引入第二种存储 API 和失败分支） |\n| D3 | 本地订单损坏如何处理 | **非破坏性读取，保留原始存储** | 自动重写（**会删掉原始证据**）／ 清空整个键（**会删掉仍有效的订单**） |\n\n**D3 的取舍值得单独讲**：选 A 的直接理由是**保留真实异常作为排查材料**。为了\"让数据好看\"而删掉证据，是这一类决策里最常见也最危险的诱惑。","decisions":"","gate_outputs":"| 检查 | 结果 |\n|---|---|\n| 语义审查 | `clean` |\n| 脱敏扫描 | HIGH / MEDIUM / LOW / WARN **全为 0** |\n| 跨模型质量评分 | **`unavailable`** |\n\n**它没有换模型充数，也没有把 `unavailable` 写成通过**，而是记为\"missing coverage, not a pass\"，并把原始输出存进证据文件。\n\n产出 `SPEC.md`（455 行）。","takeaway":"**规格的价值在于\"可验收\"**——后面第 6 环的 QA 就是逐条对照这份规格打分的。同时演示了：**当工具报\"我做不到\"时，要检查这个理由是不是真的。**\n\n---","extras":"### 两处主 Agent 的实质驳回\n\n这一环出现了两次需要人来纠正的情况：\n\n**驳回一：状态命名被改。** 子代理把业务状态里的 `PROCESSING` 换成了 `FAILED`。这属于**领域契约变更**——前面的设计已经定义了状态集合，不能在下游偷偷改。**驳回，要求恢复为 `PROCESSING`。**\n\n**驳回二：为了跳过质量门而编造理由。** 子代理声称\"spawned 会话禁止把内容发往机器外\"，据此跳过跨模型质量评分。**这条规则不存在。** 要求它真跑一次，返回的真实结果是：\n\n```text\nstatus: unavailable\ncode: custom_provider_requires_model\n```\n\n即自定义 Anthropic 端点未配置明确模型，gstack 在调用前就拒绝了。**这是个重要教训：模型会用自洽的虚构理由填补它执行不了的步骤。**","gate_results":[{"cells":["跨模型质量评分","unavailable"],"semantic":"unavailable"}]},{"canonical_ring":3,"stage_ring_no":3,"label":"autoplan","en":"autoplan","zh":"四方评审","skill":"/autoplan","lead":"","inputs":"`SPEC.md`。","analysis":"四个评审阶段**串行**执行，各管一件事：\n\n| 顺序 | 阶段 | 关注什么 |\n|---|---|---|\n| 1 | CEO | 战略与范围：这件事该不该做、做到什么程度 |\n| 2 | Design | 设计：交互与视觉的一致性 |\n| 3 | DX | 开发者体验：错误信息、可用性 |\n| 4 | Eng | 工程：可实施性、真实性核验 |\n\n**为什么要四个视角**：同一个方案，战略上成立不代表工程上可实施。串行是为了让后面的视角能看到前面的结论。","decisions":"| 决策点 | 问题 | 选择 | 依据 |\n|---|---|---|---|\n| U1 | 教学价值要不要设为发布条件 | **保持 `UNVERIFIED` 并发布** | 不扩大本轮范围；证据诚实；**不能声称教学价值已验证** |\n| DV1 | 视觉方向 | **手写果摊招牌** | 最有本地水果摊辨识度 |\n\nDV1 是**品味决策**——这类决策 AI 可以推荐，但最终应当由人定。本章节把它单独列出，正是为了说明\"哪些决策不该由 AI 自己拍板\"。","gate_outputs":"| 阶段 | 评分 | 结论 |\n|---|---|---|\n| CEO | 7/10 | FAIL / issues_open |\n| Design | 7/10 | FAIL / issues_open |\n| DX | 6/10 | FAIL / issues_open |\n| Eng | 无数字评分 | FAIL / issues_open，11 项发现，关键缺口 0 |\n\n**四阶段的跨模型外部评审全部 `unavailable`**（同一个端点原因），故 consensus 均为 N/A。\n\n**这里有个诚实行为的样本值得讲**：Eng 报告的标题计数（3 P1 / 6 P2 / 2 P3）与明细小计（4 P1 / 6 P2 / 1 P3）**对不上**。它**选择原样记录这个不一致，而不是重跑掩盖、也不静默修正**。\n\n`DECISIONS.md`（206 行）。","takeaway":"**\"四个评审都没通过，方案照样往下走\"**——门禁的作用不是把项目卡死，而是**把问题显式记录在案**。四阶段 FAIL 意味着一堆已知约束要带进施工，而不是\"评分不及格所以重做\"。\n\n---","extras":"","gate_results":[{"cells":["CEO","7/10","FAIL / issues_open"],"semantic":"fail"},{"cells":["Design","7/10","FAIL / issues_open"],"semantic":"fail"},{"cells":["DX","6/10","FAIL / issues_open"],"semantic":"fail"},{"cells":["Eng","无数字评分","FAIL / issues_open，11 项发现，关键缺口 0"],"semantic":"fail"}]},{"canonical_ring":4,"stage_ring_no":4,"label":"build","en":"build","zh":"受控施工","skill":"Build","lead":"","inputs":"`SPEC.md`（477 行）+ `DECISIONS.md`（206 行，含四阶段留下的全部约束）。","analysis":"不再是\"想做什么\"，而是\"照规格做\"。规格里已定的技术约束：\n\n- 无数据库、无服务端订单存储、**零第三方依赖**\n- 测试用内置 `node:test`\n- 购物车仅内存\n- 本地订单损坏时非破坏性读取","decisions":"","gate_outputs":"| 类别 | 文件 |\n|---|---|\n| 页面 | `index.html` |\n| 服务 | `serve.mjs`（固定回环地址的静态服务器） |\n| 前端逻辑 | `assets/` 下 7 个模块（领域 / 控制器 / 订单存储 / 商品目录 / 样式等） |\n| 测试 | `tests/` 下 5 个文件 |\n\n**实测验证**：56 项测试（55 通过、0 失败、1 跳过）；服务器启动并返回全部资源 200。\n\n| # | 自报问题 |\n|---|---|\n| 1 | **验收项 21、22 未通过**——缺两个证据文件，入口返回 404 |\n| 2 | README 引用了两个**不存在的文件**，形成死链 |\n| 3 | **实现与规格真实偏差**——规格要求 Node.js 18+，实现要求 22+ |\n| 4 | DevTools 报 1 条：数量输入框缺 `id`/`name` |\n| 5 | 教学价值仍为 `UNVERIFIED` |\n\n**它的结论原话：「核心商城可用，但 build 不能判定全量通过。」** 一个都没静默修正。","takeaway":"**施工环的产出不是\"代码\"，而是\"代码加一份诚实的自评\"。** 第 3 条那个规格与实现的偏差，是后面第 5 环真正抓到东西的引线。\n\n---","extras":"","gate_results":[{"cells":["1","验收项 21、22 未通过——缺两个证据文件，入口返回 404"],"semantic":"fail"},{"cells":["5","教学价值仍为 UNVERIFIED"],"semantic":"UNVERIFIED"}]},{"canonical_ring":5,"stage_ring_no":5,"label":"review","en":"review","zh":"结构排雷与安全审计","skill":"/review + /cso","lead":"","inputs":"代码 + `BUILD.md`（含那 5 个自报问题）。","analysis":"两类工作：**结构排雷**（代码是否兑现了规格的承诺）与**安全审计**（边界输入、数据完整性）。\n\n审查分两类动作：\n- **机械型缺陷**：确定怎么修，直接改\n- **需要权衡的**：标记为待决策项，停下来问人","decisions":"| # | 问题 | 裁决 | 依据 |\n|---|---|---|---|\n| D1 | 跨标签页读改写**可能丢失订单**（原评 CRITICAL） | **不修，记为已知限制** | `SPEC.md` 的 Out of Scope **已明确排除**「多标签页实时同步或冲突合并」。**并记录：该 CRITICAL 定级与规格排除条款冲突，定级偏高** |\n| D2 | 数量框失焦重绘**吞掉紧接的点击** | **修** | 真实交互缺陷 |\n| D3 | 结账失败**未展示**承诺的存储错误提示 | **修** | 提示与规格承诺不符 |\n| D4 | 规格要 Node 18+，实现要 22+ | **修订规格为 22+** | 项目基线是 22，实现中的检查是有意为之。**把规格改成与现实一致，并在文件内留修订记录** |\n| D5 | 缺人工浏览器证据 | **记 `UNVERIFIED`** | 没有真实受试者，**不编造记录** |\n\n**D1 是本章最值得讲的裁决。** 一个被工具标为最高严重级的缺陷，**因为落在规格明确排除的范围里，判定不修**。这演示了两件事：一是规格的排除条款是有约束力的，二是**工具的定级也要人来复核**。\n\n**D4 是\"规格漂移\"的活例子**：规格和实现不一致时，两条路（改实现或改规格）都成立，选哪条要看哪个是真实基线。这里选了改规格，并留下修订记录。","gate_outputs":"- 外部模型评审**未返回结果**（报 `unrecognized_model` 且超时），如实记录\n- 产出 `review.md`（185 行），测试增至 60 项","takeaway":"**\"CRITICAL 也可以不修\"**——严重级别是工具给的，是否在范围内是规格定的。**人在这里的作用不是重复工具的判断，而是判断工具的判断对不对。**\n\n---","extras":"### 自动修复（14 行增、2 行删）\n\n| 文件 | 改动 |\n|---|---|\n| `serve.mjs` | `--port` 参数**补空值校验**——`--port \"\"` 和 `--port=` 之前会漏过 |\n| `tests/server.test.mjs` | 为上述修复补测试 |\n| `tests/static-scan.test.mjs`、`assets/app.mjs` | 小幅补强 |\n| `assets/controller.mjs` | 删除行尾空行 |\n\n**这是真实的输入校验漏洞**：`--port \"\"` 当时能通过校验，到后面才失败。","gate_results":[]},{"canonical_ring":6,"stage_ring_no":6,"label":"qa","en":"qa","zh":"实机探索","skill":"/qa","lead":"","inputs":"代码（基线 `3400207`）。","analysis":"不是读代码，而是**真机操作**：启动服务，用真实浏览器走核心闭环、异常路径、不同屏幕宽度。","decisions":"","gate_outputs":"| 项 | 结果 |\n|---|---|\n| 核心闭环 | **通过** |\n| Critical / High | **0** |\n| Medium / Low | 1 / 1 |\n| 自动浏览器检查点 | **19 个** |\n| 人工浏览器逐项验收 | `UNVERIFIED` |\n\n**健康分（八类加权）：**\n\n| 类别 | 分 |\n|---|---|\n| Console / Visual / Functional / Performance / Content | 100 |\n| Accessibility | 100（**标注 provisional**） |\n| UX | 97（空白查询结果面板） |\n| Links | 85（`/evidence/index.md` 真实 404） |\n| **加权总分** | **98** |","takeaway":"**\"98 分不等于通过。\"** 报告里同时写着 Critical/High 为 0、两个真实问题未修、人工验收未做、无障碍只是临时分。**读 QA 报告要读全，不能只看总分。**\n\n---","extras":"### 两处诚实行为\n\n1. 证据链机制的最终判定是 `inconclusive (no evidence rows)`。报告明确写：**\"不把该判定改写成通过\"**。\n2. 无障碍分虽是 100，但**标注为 `provisional`**，并注明\"不代表完整 WCAG 人工验收\"。\n\n**这两种写法的共同点是：分数好看的地方，仍然把它的成立条件写清楚。**","gate_results":[{"cells":["核心闭环","通过"],"semantic":"pass"},{"cells":["人工浏览器逐项验收","UNVERIFIED"],"semantic":"UNVERIFIED"}]},{"canonical_ring":7,"stage_ring_no":7,"label":"ship","en":"ship","zh":"发布","skill":"/ship","lead":"","inputs":"全部产物。","analysis":"三件事：**覆盖率审计**、**文档同步**、**版本与变更记录**。\n\n覆盖率审计不是简单跑一遍测试，而是要**逐条追踪变更的代码路径并给每条路径的测试质量评星**——本轮的规模是 **18 条路径**。","decisions":"| 决策点 | 问题 | 选择 |\n|---|---|---|\n| D1 | **技能不允许从基线分支 `main` 发布** | **新建本地发布分支**（`release/r1-fruitlab-ring7`） |\n\n三个选项是：新建发布分支 / 明确例外直接在 `main` 发版 / 在门禁处停止。\n\n**这道门禁真实拦住了操作**：它没有默默在 `main` 上发版，而是停下来问。选\"新分支\"的理由是——发布提交与主线隔离，出问题可回退、可单独检查。","gate_outputs":"| 项 | 值 |\n|---|---|\n| 版本 | `1.0.0.0` |\n| `CHANGELOG.md` | 27 行 |\n| 覆盖率审计 | **18/18 路径，值加权 100%，0 缺口** |\n| 测试 | **62 项（61 通过、0 失败、1 平台跳过）** |\n| 文档同步 | 更新 `README.md` 与 `SPEC.md` |","takeaway":"**\"发版前有一道不允许绕过的门。\"** 同时注意后半段：**做不了的事就写做不了，不假装做了。**\n\n---","extras":"### 两处如实记录的不可用\n\n1. **推送 / PR / 远端部署不可用**：仓库无远端，实测 `git remote -v` 为空、`git ls-remote origin` 退出 128。记为 `requires-remote`。\n2. **回归证明不可用**：`base_unavailable`，因此**没有声称**做过\"红先失败\"或基线通过的证明。","gate_results":[{"cells":["测试","62 项（61 通过、0 失败、1 平台跳过）"],"semantic":"pass"}]},{"canonical_ring":8,"stage_ring_no":8,"label":"retro","en":"retro","zh":"量化复盘","skill":"/retro + /learn","lead":"","inputs":"真实的 Git 历史。","analysis":"量化复盘：提交统计、测试占比、热点文件、技术债。","decisions":"","gate_outputs":"`retro.md`（208 行），基于真实 Git 历史计算。","takeaway":"复盘不是写感想，而是**从真实提交历史里算指标**。数据来源是 Git 本身，不是回忆。","extras":"### 原始产物节选（`retro.md` 真实内容）\n\n> 完整文件：`D:\\vibecoding\\easyvibe\\r1-fruitlab\\retro.md`（208 行）。这里只摘出**有教学价值的部分**——不是最漂亮的数字，而是**报告对自己结论的怀疑**。\n\n**开头一行摘要（全部算出来的）：**\n\n```text\nWeek of Oct 11: 12 commits (1 contributor), 9.9k LOC, 16% tests, 4 features, peak: 5pm | Streak: 1d\n```\n\n**20 个小节的结构：** `Scope And Ref Reconciliation` → `Summary Table` → `Per-Author Leaderboard` → `Trends vs Last Retro` → `Time And Session Patterns` → `Shipping Velocity` → `Code Quality Signals` → `Test Health` → `Plan Completion` → `Focus And Highlights` → `Shipping Streaks` → `Shortcut Debt` → `Technical Debt` → `Your Week` → `Team Breakdown` → `AI Collaboration Note` → `Top 3 Team Wins` → `3 Things To Improve` → `3 Habits For Next Week` → `Week-Over-Week Trends` → `Evidence Boundaries`\n\n**关键数字：**\n\n| 指标 | 值 |\n|---|---|\n| Commits | 12（在 `release/r1-fruitlab-ring7` 上） |\n| Raw LOC | +9,944 / −247，净 +9,697 |\n| Test LOC ratio | **16%**（低于 20% 底线） |\n| 测试 | 62 项（61 通过 / 0 失败 / **1 平台跳过**） |\n| 会话 | 3 段共 151 分钟，峰值 17:00 |\n| Skill 调用 | `/office-hours` 10、`/spec` 5、`/autoplan` 5、`/review` 3、`/ship` 2、`/qa` 1 |\n\n#### 三处\"报告怀疑自己\"的地方（本节真正的教学点）\n\n**1. 主动暴露取数偏差。** 原文：\n\n> Step 0 检测到 GitHub 认证环境，但本仓库**没有 `origin`**。Step 1 对 `main` 只测到 9 个提交、12% 测试占比，且**止于第 6 环**。因此报告改用发布分支，以免第 7 环与发布提交被静默漏掉。Freshness 仍为 `UNVERIFIED`。\n\n**2. 主动承认指标口径有问题。** 原文：\n\n> fix ratio 测得 0%，但**这 0 部分是分类造成的假象**——`review: resolve ring 5 ASK decisions` 里含 D2/D3 修复，只是没加 `fix:` 前缀。\n\n同类还有 `AI Collaboration Note`：指标工具报 0 个 AI 协作提交，但 `c13e8fa` 的 Git body 里有 `Co-Authored-By: OpenAI Codex`——**实际 8%，差异原因是署名写在 body 而非结构化 trailer**。\n\n**3. `Evidence Boundaries` 一节全是 `UNVERIFIED`。** 人工 Chromium 检查、P5 教学价值、外部模型评审、远端新鲜度——逐条列明做不到。其中还有一条 `Prior learning applied`，说明它**真的复用了历史经验**（`claude-review-custom-endpoint-needs-pin`，置信度 9/10）。\n\n> **为什么这三处比\"算出 Test Ratio 16%\"更值得讲**：一个复盘报告的价值不在它算得准，而在**它知道自己哪里算不准、并把边界写下来**。这正是第 8 环与\"写周报\"的根本区别。\n\n---","gate_results":[]}]},{"id":"R2","version":"2.0.0.0","order":2,"tagline":"在冻结的旧版本旁边做一次真实升级","partial":false,"source_file":"R2/R2-八环讲解记录.md","brief_title":"零、起点与约束","brief":"**输入**：`PRD-R2.md`（替代 office-hours）。它规定：持久化、用户与身份、权限、管理员、命令行、商品 10→14、视觉重塑、义务追溯。\n\n**四条执行约束**（沿用 R1）：\n1. 八环依次走：**第 1 环由手写 PRD 承担** → spec → autoplan → build → review → qa → ship → retro；\n2. 每环产出文件并落盘；\n3. **每环边界停下汇报，得到许可才流转**；\n4. 需拍板的决策列选项与利弊。\n\n**两处方向性用户决策（课堂重点）**：\n- **U1=A**：保持 PRD 全量范围，按 M1–M5 里程碑交付（不拆 R2a/R2b）。\n- **U2=A**：移除 R1 的「访客查单」——R2 需登录且只能查自己的订单（breaking，但符合权限模型）。\n\n**两个目录**：`r1-fruitlab`（冻结展品，4173）与 `r2-fruitlab`（施工区，保留 R1 完整 Git 历史，4174），课堂可并排对比。`scripts/start-both.mjs` 可同时启动两边。\n\n**基线标签**：`r1-baseline` 打在 `c1167e0`。这不是形式——它让「R2 到底改了哪些」永远可以 `git diff` 出来（`d` 环复盘用的就是 `r1-baseline..HEAD`）。\n\n---","summary":"> **R1 证明「一句话需求能变成可运行、可追溯的交付」；R2 证明「已交付的系统能按流程安全升级」。**\n>\n> 第 1 环由手写 PRD 承担；spec 先读代码、把 PRD 钉成 AC，并在两轮 6.5/10 的审阅后**采纳 5 项真缺口**；autoplan 四阶段全 FAIL 但产出 42 条义务，还**用 D-33 推翻了 spec 的 D-30**；build 按里程碑施工并让 96 项测试全绿、图片重抓 9 次；review 用真实探针扫出 N+1 与信息泄露并直接修（**6 修 / 7 问**）；qa 在真实浏览器里发现「图片内容错」这种文档看不出的问题，并当场演示了水平越权被拒；ship 被发布分支门禁拦住、无远端就写 `requires-remote`；retro 用 Git 数据算出 Test Ratio 0.669、热点与返工。\n>\n> **流程的价值不在「自动完成」，而在每个环节都能指出来：这一步做了什么判断、依据是什么、留下了什么、以及哪些没做到。**\n\n---","overview":[["1","手写 PRD（替代 /office-hours）","PRD-R2.md","范围 8 项；U1/U2 两处方向决策"],["2","/spec","SPEC.md（v1.0→v1.1）","4.5a 语义审查通过、4.5b 本地脱敏通过、4.5c 跨模型 unavailable"],["3","/autoplan","DECISIONS.md","CEO 6.5 / Design 7.0 / DX 5.7 / Eng 6.5，四阶段全 FAIL → 42 条义务"],["4","build","代码 + 测试 + BUILD.md","M1–M5；96 项测试全绿；HTTP 冒烟通过"],["5","/review + /cso（替代）","review.md","6 项自动修复（含 N+1）；/cso 记 unavailable"],["6","/qa","qa-report.md","真实 Chromium 五断点；健康分 94"],["7","/ship","VERSION + CHANGELOG.md","发布分支 + 合回 main；2.0.0.0；requires-remote"],["8","/retro + /learn（替代）","retro.md","量化复盘 + 经验库"]],"gate_matrix":[{"ring_label":"spec","mechanism":"4.5a 语义审查","result_raw":"通过（修 2 处）","semantic":"pass"},{"ring_label":"spec","mechanism":"4.5b 脱敏","result_raw":"通过（本地等价扫描，HIGH 0 / MEDIUM 0）","semantic":"pass"},{"ring_label":"spec","mechanism":"4.5c 跨模型评分","result_raw":"unavailable（同族，不冒充）","semantic":"unavailable"},{"ring_label":"spec","mechanism":"同族二次审阅（两轮 6.5/10）","result_raw":"未过 7 分线，但采纳 5 项真缺口","semantic":"info"},{"ring_label":"autoplan","mechanism":"CEO/Design/DX/Eng","result_raw":"4/4 FAIL / issues_open","semantic":"fail"},{"ring_label":"autoplan","mechanism":"终门","result_raw":"gate_rev=1，用户批准 U1=A/U2=A","semantic":"info"},{"ring_label":"autoplan","mechanism":"官方运行件","result_raw":"unavailable（未安装），手动执行流程","semantic":"unavailable"},{"ring_label":"review","mechanism":"自动修复 / ASK","result_raw":"6 项自动修；7 项 ASK 用户确认保留","semantic":"info"},{"ring_label":"review","mechanism":"/cso","result_raw":"unavailable（运行件缺失），人工探针替代","semantic":"unavailable"},{"ring_label":"qa","mechanism":"健康分","result_raw":"94（无 Critical/High）","semantic":"info"},{"ring_label":"ship","mechanism":"覆盖率审计","result_raw":"27 路径，0 未覆盖","semantic":"info"},{"ring_label":"ship","mechanism":"发布分支门禁","result_raw":"拦下直接 main 发版，改走 release 分支","semantic":"info"},{"ring_label":"ship","mechanism":"推送/PR/部署","result_raw":"requires-remote","semantic":"requires-remote"},{"ring_label":"ship","mechanism":"回归证明","result_raw":"not-run（不声称 red-first）","semantic":"not-run"},{"ring_label":"retro","mechanism":"债务账本","result_raw":"5 TODOS + 5 Known Issues","semantic":"info"}],"honest_list":[{"item":"跨模型质量门","status":"unavailable","reason":"本机只有同族模型，不换模型充数","semantic":"unavailable"},{"item":"/cso 官方六类扫描器","status":"unavailable","reason":"运行件缺失；人工审计替代","semantic":"unavailable"},{"item":"官方 autoplan 运行件","status":"unavailable","reason":"本宿主未安装；按技能文档手动执行","semantic":"unavailable"},{"item":"推送 / PR / 远端部署 / 金丝雀","status":"requires-remote","reason":"仓库无远端","semantic":"requires-remote"},{"item":"回归证明（红先失败）","status":"not-run","reason":"无独立基线环境","semantic":"not-run"},{"item":"干净目录 clone 二次运行","status":"UNVERIFIED","reason":"仅本机验证","semantic":"UNVERIFIED"},{"item":"人工无障碍 / 对比度仪器","status":"UNVERIFIED","reason":"无受试条件","semantic":"UNVERIFIED"},{"item":"真实学员教学价值（P5）","status":"UNVERIFIED","reason":"无学习者观察","semantic":"UNVERIFIED"},{"item":"图片授权与尺寸","status":"降级并记录","reason":"CC0/BY/SA/PD；12 张短边 <800","semantic":"info"},{"item":"会话过期 / CSRF / 限流","status":"未实现","reason":"PRD FR-2 明确不做","semantic":"info"},{"item":"订单号存在性泄露","status":"接受（D-32）","reason":"课堂需演示水平越权；代价已记录","semantic":"info"},{"item":"移动端导航（QA-01）","status":"已修","reason":"折行后全部入口可见","semantic":"info"}],"extras":"## 〇之二、承接 R1：7 项技术债与 3 条改进建议的处置\n\nR1 的 `retro.md` 留下了 **7 项技术债**与 **3 条改进建议**。R2 的 spec 环把它们当作输入逐条处理——**这是\"迭代闭环\"最硬的证据**。\n\n### 7 项技术债\n\n| # | R1 retro 记录项 | R2 处置 | 证据 |\n|---|---|---|---|\n| 1 | 证据索引入口 **404** | ✅ **已修** | 新增 `evidence/index.md`（2.4KB）+ `scripts/check-links.mjs` 自动检查 |\n| 2 | **ISSUE-002 空白结果面板** | ❌ **仍未修** | `CHANGELOG.md:66`：「ISSUE-002 **仍存在**……结果区域仍保留只有『查询结果』标题的空白面板」 |\n| 3 | 多标签页结账覆盖 | ❌ **仍为已知限制** | `CHANGELOG.md:69`：规格已排除多标签页冲突合并 |\n| 4 | 人工 Chromium M1–M16 | ⚠️ **部分** | 新增 `evidence/manual-checks/browser.md`（1.9KB）；但读屏器 / 键盘全流程 / 对比度仍 `UNVERIFIED` |\n| 5 | P5 教学价值 | ❌ 仍 `UNVERIFIED` | 无学习者观察 |\n| 6 | 远端交付 | ❌ **仍无远端** | `git remote -v` 为空，仍记 `requires-remote` |\n| 7 | 外部模型评审 | ⚠️ **有进展但未达标** | 新增 `evidence/ring-review-codex.md`、`ring-review-cso.md`、`cso/cso-report.md`；但**同族非跨模型**，`DECISIONS.md:13` 明确记 `unavailable` |\n\n**统计：修 1 项、有进展 2 项、仍缺 4 项。**\n\n### 3 条改进建议\n\n| R1 建议 | R2 兑现 |\n|---|---|\n| 1. 补齐 `evidence/index` 或移除悬空入口，**加一条链接可解析的自动检查** | ✅ **完全兑现**——`scripts/check-links.mjs` 就是这条建议的直接产物 |\n| 2. 修 ISSUE-002 并加回归用例 | ❌ **未做**（CHANGELOG 明确「仍存在」） |\n| 3. 提高 `app.mjs` 测试深度，**Test Ratio 从 16% 提到 ≥20%** | ✅ **大幅超额**——R2 的 Test Ratio 达 **0.669**（66.9%），超出门槛 3 倍多 |\n\n### 一处必须讲清的判断\n\n**\"R1 提了、R2 没修\"不等于失败。** 因为 R2 的 PRD 范围里没有 ISSUE-002 与多标签页：\n\n- **多标签页**：`SPEC.md` 的 `NOT in scope` 已明确排除，**R1 retro 自己标的就是 `accepted limitation`**（不是 open defect）；\n- **ISSUE-002**：R2 的 42 条义务里没有它。\n\n**所以准确说法是**：R1 留下的 7 项债，R2 在**自己范围内**修了该修的（链接检查、测试占比），**范围外的如实继续挂着**——并且**在 CHANGELOG 里写清「仍存在」**，没有静默消失。\n\n> **这就是跨版本承接的正确形态**：不是\"把上一轮的债全清完\"，而是\"逐条判断哪些该这轮修、哪些该继续挂、并把判断写下来\"。\n\n---\n\n## 十、42 条义务与 G1–G7\n\n- **义务**：`OB-CEO-*` 14 / `OB-DES-*` 8 / `OB-DX-*` 12 / `OB-ENG-*` 8 = 42，**全部 `closed`**（0 降级 / 0 未覆盖），证据在 `docs/obligations.md`、`BUILD.md` 与各环报告。\n- **义务编号规则**：`OB-<阶段>-<序号>`，`BUILD.md` **同时引用 `AC` 与 `OB`**。之所以不复用 R1 的 F/DF/DX/E 编号，是因为**R1 编号已被冻结，复用会产生歧义**。\n- **G1–G7**：死链、证据包、契约冻结、`aria-invalid`、编号体系、测试计数、发布分支——**全部关闭，每项有可机械核对的形态**：\n\n| 缺口 | 机械形态 |\n|---|---|\n| G1 死链 | `scripts/check-links.mjs` |\n| G2 证据包 | `evidence/manifest.json` 逐文件 SHA-256 + `scripts/verify-evidence.mjs` |\n| G3 契约冻结 | `docs/contracts.md` + `docs/branch-matrix.md` + `tests/contracts.test.mjs` |\n| G4 `aria-invalid` | `tests/app.test.mjs` |\n| G5 编号 | `scripts/check-numbering.mjs` |\n| G6 测试计数 | `scripts/record-test-count.mjs` → `evidence/test-count.txt` |\n| G7 发布分支 | `evidence/g7-release-merge.txt` + Git 历史 |\n\n**为什么\"机械形态\"是关键**：`R1-义务覆盖率核查.md` 指出 R1 掉队的两类正是**证据包**与**契约冻结**——它们都是文档类义务，没有落点。R2 的答案不是\"更仔细一点\"，而是**给每类义务配一个能跑的脚本**。\n\n**一处必须讲清的取舍（D-32）**：他人订单返回 **403** 而不是 404，因此**接受\"订单号存在性泄露\"**。理由写得很直白——**课堂需要可演示的水平越权拒绝**；泄露代价已显式记录在文档里。\n\n**这是\"诚实工程\"最难看懂的一条**：它不是\"我们做得完美\"，而是\"我们选了一个有已知代价的方案，并把这个代价写下来了\"。\n\n---\n\n## 附录 A：R1 与 R2 对比\n\n| 指标 | R1 | R2 |\n|---|---|---|\n| 版本 | 1.0.0.0 | 2.0.0.0 |\n| 测试 | 62（61 通过/1 跳过） | 96（96 通过） |\n| 运行形态 | 纯浏览器 + 静态托管 | 服务端 DB + 会话 + API + CLI |\n| 商品 | 10 种文字卡 | 14 种真实照片 + Apple 式版式 |\n| 缺口 | 7 项未收敛 | G1–G7 全关、42 义务全 closed |\n| 发布 | main 直发被拦 | 发布分支 + 合回 main |\n| 义务追溯 | 只有规格追溯，文档类义务掉队 | **AC × OB 双向追溯**，每类缺口配脚本 |\n| 决策留痕 | 无独立台账 | **`docs/decision-log.md` 追加式，46 条决策** |\n\n## 附录 B：本文件与源文件的关系\n\n本记录的正文（第一至十二节与附录 A）沿用课程侧 `R2-八环讲解记录.md`；**「决策与依据」小节的编号决策、门禁实测输出、扫描命令与结果、返工明细，取自 R2 仓库的 `docs/decision-log.md`、`docs/obligations.md`、`evidence/ring-*.md`、`evidence/clean-run.md`**，用于把决策依据层补厚到与 R1/R3 相同的密度。\n\n对应关系：`docs/decision-log.md` 46 条决策（D-01～D-46）· `docs/obligations.md` 42 条义务 · `evidence/ring-*.md` 8 份逐环证据 · `evidence/autoplan-voices/*.txt` 四视角原始输出。","handoff":{"title":"〇之二、承接 R1：7 项技术债与 3 条改进建议的处置","body":"R1 的 `retro.md` 留下了 **7 项技术债**与 **3 条改进建议**。R2 的 spec 环把它们当作输入逐条处理——**这是\"迭代闭环\"最硬的证据**。\n\n### 7 项技术债\n\n| # | R1 retro 记录项 | R2 处置 | 证据 |\n|---|---|---|---|\n| 1 | 证据索引入口 **404** | ✅ **已修** | 新增 `evidence/index.md`（2.4KB）+ `scripts/check-links.mjs` 自动检查 |\n| 2 | **ISSUE-002 空白结果面板** | ❌ **仍未修** | `CHANGELOG.md:66`：「ISSUE-002 **仍存在**……结果区域仍保留只有『查询结果』标题的空白面板」 |\n| 3 | 多标签页结账覆盖 | ❌ **仍为已知限制** | `CHANGELOG.md:69`：规格已排除多标签页冲突合并 |\n| 4 | 人工 Chromium M1–M16 | ⚠️ **部分** | 新增 `evidence/manual-checks/browser.md`（1.9KB）；但读屏器 / 键盘全流程 / 对比度仍 `UNVERIFIED` |\n| 5 | P5 教学价值 | ❌ 仍 `UNVERIFIED` | 无学习者观察 |\n| 6 | 远端交付 | ❌ **仍无远端** | `git remote -v` 为空，仍记 `requires-remote` |\n| 7 | 外部模型评审 | ⚠️ **有进展但未达标** | 新增 `evidence/ring-review-codex.md`、`ring-review-cso.md`、`cso/cso-report.md`；但**同族非跨模型**，`DECISIONS.md:13` 明确记 `unavailable` |\n\n**统计：修 1 项、有进展 2 项、仍缺 4 项。**\n\n### 3 条改进建议\n\n| R1 建议 | R2 兑现 |\n|---|---|\n| 1. 补齐 `evidence/index` 或移除悬空入口，**加一条链接可解析的自动检查** | ✅ **完全兑现**——`scripts/check-links.mjs` 就是这条建议的直接产物 |\n| 2. 修 ISSUE-002 并加回归用例 | ❌ **未做**（CHANGELOG 明确「仍存在」） |\n| 3. 提高 `app.mjs` 测试深度，**Test Ratio 从 16% 提到 ≥20%** | ✅ **大幅超额**——R2 的 Test Ratio 达 **0.669**（66.9%），超出门槛 3 倍多 |\n\n### 一处必须讲清的判断\n\n**\"R1 提了、R2 没修\"不等于失败。** 因为 R2 的 PRD 范围里没有 ISSUE-002 与多标签页：\n\n- **多标签页**：`SPEC.md` 的 `NOT in scope` 已明确排除，**R1 retro 自己标的就是 `accepted limitation`**（不是 open defect）；\n- **ISSUE-002**：R2 的 42 条义务里没有它。\n\n**所以准确说法是**：R1 留下的 7 项债，R2 在**自己范围内**修了该修的（链接检查、测试占比），**范围外的如实继续挂着**——并且**在 CHANGELOG 里写清「仍存在」**，没有静默消失。\n\n> **这就是跨版本承接的正确形态**：不是\"把上一轮的债全清完\"，而是\"逐条判断哪些该这轮修、哪些该继续挂、并把判断写下来\"。\n\n---"},"prompt":{"kind":"手写 PRD","title":"R2 PRD：从单机演示到带角色的可持久化系统","body":"> **文档定位**：本文替代 R2 的 office-hours 环节。R2 的八个环节从 **spec** 开始，依据就是本文。\n> **上游**：R1 的完整产物（`SPEC.md`、`DECISIONS.md`、`review.md`、`qa-report.md`、`CHANGELOG.md`、`retro.md`）。\n> **工作目录**：`D:\\vibecoding\\easyvibe\\r2-fruitlab`，从 R1 的正式状态（`main` @ R1 发布版本）复制而来，**保留 R1 的完整 Git 历史**。\n\n---\n\n## 1. 起点：R1 交付了什么\n\n| 项 | 状态 |\n|---|---|\n| 形态 | 纯浏览器端水果商城演示 |\n| 功能 | 10 种水果可浏览、可下单、可查单 |\n| 存储 | 浏览器本地存储（`localStorage`），无数据库 |\n| 服务端 | `serve.mjs` **仅做静态托管**（只接受 GET / HEAD） |\n| 依赖 | 零第三方依赖 |\n| 版本 | `1.0.0.0` |\n| 测试 | 62 项（61 通过、1 平台跳过） |\n| 关键接缝 | `order-store.mjs` 的 `readOrders(storage)` 与 `appendOrder(storage, order)` **把存储对象当参数注入**，本身不直接摸 `localStorage` |\n\n**这个接缝很重要**：R1 已经把存储实现与业务逻辑分开了，R2 换存储时接口有机会保持不变或有限演进。\n\n---","source":"R2/PRD-R2.md"},"rings":[{"canonical_ring":1,"stage_ring_no":1,"label":"手写 PRD","en":"office-hours","zh":"需求诊断","skill":"手写 PRD（替代 /office-hours）","lead":"需求已经明确，所以本阶段**不重跑 `/office-hours`**，改用**手写 PRD** 承担第 1 环。第 1 环的产出就是这份 PRD。","inputs":"| 项 | 状态 |\n|---|---|\n| 形态 | 纯浏览器端水果商城演示 |\n| 功能 | 10 种水果可浏览、可下单、可查单 |\n| 存储 | 浏览器本地存储（`localStorage`），无数据库 |\n| 服务端 | `serve.mjs` **仅做静态托管**（只接受 GET / HEAD） |\n| 依赖 | 零第三方依赖 |\n| 版本 | `1.0.0.0` |\n| 测试 | 62 项（61 通过、1 平台跳过） |\n| 关键接缝 | `order-store.mjs` 的 `readOrders(storage)` 与 `appendOrder(storage, order)` **把存储对象当参数注入**，本身不直接摸 `localStorage` |\n\n**这个接缝很重要**：R1 已经把存储实现与业务逻辑分开了，R2 换存储时接口有机会保持不变或有限演进。\n\n---","analysis":"**R2 目标**\n\n把\"单机演示\"演进为\"带服务端、数据库与角色的系统\"，同时完成三件事：\n\n| # | 目标 | 说明 |\n|---|---|---|\n| 1 | **功能演进** | 持久化、用户与身份、权限、管理员、命令行 |\n| 2 | **缺口收敛** | 第 2 节 G1 至 G7 全部关闭或明确降级并记录 |\n| 3 | **机制补强** | 建立**义务追溯机制**，修补 R1 暴露的最大流程缺陷 |\n\n**第 3 条是本轮的重点**：R1 的义务落进了代码，但 `BUILD.md` 的验收表照的是 `SPEC.md`，没有任何机制证明 38 条义务全覆盖。结果行为类义务顺手做了、文档类义务掉了。\n\n---\n\n**功能需求**\n\n### FR-1 持久化\n\n- 服务端引入数据库，商品、订单、用户三类数据落库。\n- **商品从 R1 的 10 种扩展到 14 种**：R1 的 10 种迁入数据库作为种子数据，另新增 4 种。\n- 订单归属到用户。\n- 前端不再以浏览器本地存储作为订单的权威来源。\n\n**14 种商品清单**：\n\n| # | 商品 | 规格 | 标识 | 来源 |\n|---:|---|---|---|---|\n| 1 | 红富士苹果 | 500g | `fuji-apple` | R1 |\n| 2 | 海南香蕉 | 1kg | `banana` | R1 |\n| 3 | 赣南脐橙 | 1kg | `navel-orange` | R1 |\n| 4 | 阳光玫瑰葡萄 | 500g | `shine-muscat` | R1 |\n| 5 | 海南金钻凤梨 | 1个 | `golden-pineapple` | R1 |\n| 6 | 泰国金枕榴莲 | 1kg | `durian` | R1 |\n| 7 | 新疆哈密瓜 | 1个 | `hami-melon` | R1 |\n| 8 | 山东水蜜桃 | 500g | `peach` | R1 |\n| 9 | 智利蓝莓 | 125g | `blueberry` | R1 |\n| 10 | 云南红心火龙果 | 1个 | `red-dragon-fruit` | R1 |\n| 11 | 智利车厘子 | 500g | `cherry` | **R2 新增** |\n| 12 | 海南贵妃芒 | 1kg | `mango` | **R2 新增** |\n| 13 | 陕西徐香猕猴桃 | 500g | `kiwi` | **R2 新增** |\n| 14 | 辽宁丹东红颜草莓 | 500g | `strawberry` | **R2 新增** |\n\n**新增 4 种的选型理由**：填补当前 10 种在品类与色调上的空缺——车厘子补高价进口档与红色主体，贵妃芒补热带黄色系，猕猴桃补绿色主体，草莓补大众熟知的红色浆果（与蓝莓形成对照）。\n\n### FR-2 用户与身份\n\n- 支持注册与登录。\n- 预置三个账号：`userA`、`userB`、`admin`。\n- 口令必须哈希存储，不得明文。\n- **会话机制：服务端会话 + Cookie（已定，方案 A）。**\n\n**会话机制的具体要求**：\n\n- 登录成功后由服务端签发会话标识，经 Cookie 传递。\n- 会话状态保存在服务端。\n- 受保护的操作（查自己的订单、管理员操作）必须校验会话。\n- **本版明确不做**（边界必须写清，不得暗示这是生产级安全）：\n  - 无会话过期与续期策略\n  - 无 CSRF 防护\n  - 无登录失败次数限制与账号锁定\n  - 无 HTTPS，Cookie 不具备 `Secure` 属性\n  - 无\"记住我\"与跨设备会话\n\n### FR-3 权限\n\n- `userA` 与 `userB` **只能查到自己的订单**。\n- `admin` 可查看全部订单。\n- 越权访问必须被拒绝，且拒绝行为可被实测验证。\n\n### FR-4 管理员\n\n- 管理员可修改商品库存。\n- 管理员可修改商品价格。\n- 管理员可上架与下架商品。**沿用 R1 已定的语义**：下架商品不出现在列表；零库存商品仍出现在列表并显示售罄。\n\n### FR-5 命令行\n\n- 提供服务端运维与管理员命令行能力。范围建议：数据库初始化与种子、用户管理、库存查看。\n- **沿用 R1 已定的 CLI 契约**：`--help`、`--version`、`--port`、未知参数处理、端口冲突的可操作提示。\n\n### FR-6 前端\n\n- 增加登录入口、我的订单、管理员界面。\n- **沿用 R1 已定的交互契约**：顶层查订单入口、结果标题聚焦、失焦重绘不吞点击、存储失败显示具体错误码对应文案。\n\n### FR-7 视觉重塑：专业电商风格\n\n**背景**：R1 的视觉方向由第 3 环 `DV1` 裁决为「手写果摊招牌」，整体观感偏卡通；商品卡无图片，是纯文字卡（第 3 环 `DF8` 已指出\"十张文字密集的卡\"）。**R2 明确废弃 `DV1`。**\n\n**要求**：\n\n1. **商品照片**：每个商品一张真实照片，**共 14 张**。\n   - 照片**必须是仓库内的本地文件**：`index.html` 的 CSP 为 `img-src 'self' data:`，**远程图片会被拦截**。\n   - 来源：从免费图库下载后提交进仓库。\n   - **每张照片必须记录来源与授权**，写入一份可核对的清单，不得来历不明。\n2. **版式方向：参照亚马逊商品列表风格。**\n   - 白底、较密集的网格布局\n   - 卡片结构：照片在上（白底居中、留足留白）、标题（最多两行）、规格（单位）、价格醒目、加入购物车按钮\n   - 顶部：标识、搜索框、账户入口、购物车\n3. **字体**：CSP 与 R1 的既有约定都不允许外部字体，**只使用系统字体栈**。\n4. **数据模型**：商品增加图片字段，并带替代文本。\n5. **无障碍**：每张商品图必须有 `alt` 文本。\n6. **不得牺牲既有契约**：R1 已定的交互契约（顶层查订单入口、结果标题聚焦、失败提示等）在重塑后必须仍然成立。\n\n**已识别的连带影响**：R1 的 `DF8`（视觉方向过于通用）与 `DV1`（手写果摊招牌）在 R2 被取代，这属于**方向变更**，需写入第 5 节的契约变更对照表。\n\n---\n\n**非目标**\n\n- 不做真实支付、物流、退款、税费、运费、折扣。\n- 不做生产级安全加固（但不得明文存口令）。\n- 不做线上部署、CI/CD、域名与 HTTPS。\n- 不引入第三方依赖、CDN、远程字体或远程图片。\n- 不做多标签页实时同步（R1 已在规格中排除该场景）。\n- 不重写 R1 的领域层与交互契约，除非为满足 FR 确有需要并记录理由。\n\n---\n\n**技术约束**\n\n- 运行时基线 **Node.js 22+**（R1 已定）。\n- **零第三方依赖**，数据库使用 Node 内置能力。\n- 继续使用内置测试框架 `node:test`。\n- 服务端继续监听固定回环地址，但**端口需与 R1 区分**，以便两个版本同时运行。\n\n### 工作区布局（硬约束）\n\nR1 与 R2 **必须是两个独立目录**，因为教学中需要同时展示\"升级前\"与\"升级后\"：\n\n| 目录 | 角色 | 状态 |\n|---|---|---|\n| `D:\\vibecoding\\easyvibe\\r1-fruitlab` | **升级前**的展品 | **冻结，一行都不得改动** |\n| `D:\\vibecoding\\easyvibe\\r2-fruitlab` | **升级后**的成果 | R2 的施工场所（本目录） |\n\n- R2 目录从 R1 的正式状态复制而来，**保留 R1 的完整 Git 历史**，因此\"改了哪些地方\"始终可以出 diff。\n- 两个目录**必须能同时启动并各自访问**，供课堂并排对比。\n- **R2 的任何改动都不得写回 R1 目录**。\n\n---\n\n**范围提示**\n\n本 PRD 的功能范围**明显大于 R1**。R1 是一次 hello world 规模的流程演示，R2 要同时完成四件事：\n\n1. 功能演进（持久化、用户、权限、管理员、命令行）\n2. 缺口收敛（G1 至 G7）\n3. 机制补强（义务追溯）\n4. **视觉重塑**（废弃 `DV1`，改为带真实照片的专业电商版式）\n\n**风险已识别**：四项并行容易导致范围失控。R2 的 spec 环节需要把本 PRD 拆成可验收的条目，并明确哪些是必做、哪些可降级。\n\n**其中第 4 项的性质与前三项不同**：它是**观感与版式的整体替换**，不是增量功能，改动面覆盖前端结构、样式与数据模型（商品增图片字段）。spec 环节应把它当作独立工作流处理，避免与功能改动纠缠。","decisions":"","gate_outputs":"**验收标准**\n\n除本 PRD 的功能需求外，R2 结束时必须能拿出以下证据：\n\n| # | 验收项 |\n|---|---|\n| A1 | 三个预置账号可登录，`userA` 看不到 `userB` 的订单 |\n| A2 | 管理员可改库存、改价格、上下架，且前端行为符合 FR-4 语义 |\n| A3 | 数据在服务重启后仍存在（证明持久化真实生效） |\n| A4 | 命令行能力可演示，且沿用 R1 的 CLI 契约 |\n| A5 | **第 2 节 G1 至 G7 的处置结果逐项列出**（关闭或降级，附理由） |\n| A6 | **义务追溯表存在**，且能证明每条义务的落实位置 |\n| A7 | 契约变更前后对照表存在（见第 5 节） |\n| A8 | 测试计数只有唯一权威来源 |\n| A9 | 无失效链接、无悬空引用 |\n| A10 | **14 个商品各有本地照片**，且每张照片的来源与授权可核对（见 FR-7） |\n| A11 | **商品列表呈现为带照片的专业电商版式**，卡片结构符合 FR-7，不再是纯文字卡 |\n| A12 | 每张商品图有 `alt` 文本；未引入外部字体或远程图片 |\n\n---\n\n**R1 留下的缺口（R2 明确承接）**\n\nR1 第 3 环四方评审产生 38 条义务，实测 **落实 29 / 部分落实 7 / 未见 2**。未收敛部分如下，**R2 必须逐项关闭或明确降级**：\n\n| # | 缺口 | 来源 | R2 处置要求 |\n|---|---|---|---|\n| G1 | 4 个失效链接：`/BUILD-LOG.md`、`/evidence/clean-run.md`、`/evidence/index.md`、`/evidence/manual-checks/browser.md` | 三环各自发现一次、未修 | **要么生成文件，要么删掉引用**，不得继续悬空 |\n| G2 | 证据包从未生成（逐文件哈希、拷贝清单、`clean-run.sha256`） | 义务 F3、E9（未见） | 本轮生成，或用一次校验替代 |\n| G3 | 契约冻结不完整（导出签名、精确失败形状、分支矩阵） | 义务 E4、E6、E7、E10、DX8 | 本轮冻结，且要有机械可核对的形态 |\n| G4 | `aria-invalid` 只加在数量输入框，查单输入框没有 | 义务 DF10 | 推广到同类输入 |\n| G5 | 规格引用了不存在的手工检查项（M18/M19，规格只到 M16） | 义务 DX13 | 编号体系做一次一致性校验 |\n| G6 | 测试计数三处不一致：`BUILD.md` 写 56、`review.md` 与 `qa-report.md` 写 60、实测 62 | R1 附带发现 | 建立唯一权威计数 |\n| G7 | R1 发布分支未合并回 `main` | R1 收尾遗留 | R2 开始前或结束后收口 |\n\n---\n\n**契约演进要求**\n\nR1 的存储契约（`order-store.mjs` 的两个函数）在 R2 **必然要改**——订单归属用户、数据源从浏览器存储变为服务端。\n\n**这不是缺陷，而是本轮要演示的东西。** 要求：\n\n1. 契约的**变更前后**必须写清楚：旧签名、新签名、变更原因。\n2. 变更必须是**有意的、记录的**，不得悄悄改掉。\n3. 领域逻辑（`domain.mjs` 的纯函数，如金额计算、订单号格式、校验）**应尽量原样复用**，以此证明 R1 的分层是有效的。\n4. R2 结束时，必须能回答：\"R1 的哪些契约被保住了、哪些被改了、为什么。\"\n\n---\n\n**追溯机制要求**\n\nR2 必须建立 R1 缺失的追溯链：\n\n1. **`BUILD.md` 的验收表必须同时引用 `SPEC.md` 的验收编号与 `DECISIONS.md` 的义务编号**，不得只对规格。\n2. **review 与 qa 必须按义务清单逐项核对**，不得只对规格。\n3. 义务的**完成判据要写清楚**：行为类义务用测试判定；文档类义务必须给出可机械核对的形态（清单、矩阵、哈希），不得以\"已实现\"代替。\n4. 无法完成的义务**如实标记**，不允许静默降级。\n\n---","takeaway":"第 1 环的目的不是产出文档，而是**把「要做什么、不做什么」钉死**。手写 PRD 同样要交代起点、目标、非目标与验收标准——否则后面的环没有判断依据。","extras":"","gate_results":[],"synthetic":true,"source_note":"R2/PRD-R2.md"},{"canonical_ring":2,"stage_ring_no":2,"label":"spec","en":"spec","zh":"规格定型","skill":"/spec","lead":"","inputs":"`PRD-R2.md`、R1 八环产物、`R1-义务覆盖率核查.md`、`R1-八环讲解记录.md`、`R1-操作经验教训.md`。","analysis":"","decisions":"**第一件事是读代码取证，不是写规格。** 三处实测发现直接改变了后面的技术选择：\n\n| 取证发现 | 怎么发现的 | 对方案的影响 |\n|---|---|---|\n| `serve.mjs` 白名单里 **4 个文件不存在**（G1 死链） | 逐个核对白名单与实际文件 | 证据索引方案必须落地，否则死链照旧 |\n| CSP 为 `connect-src 'none'` | 读 R1 的响应头 | **R2 调 API 会被自己的 CSP 拦死**，必须先改 |\n| `node:sqlite` 无需标志位可用、文件库重开可读 | 真跑一个往返脚本 | 确定为持久化方案（零依赖成立） |\n| Pexels / Unsplash / Pixabay 直连 **401/403**；Openverse API 可用且带授权元数据 | 逐个实测 | 图库改用 Openverse |\n\n**技术决策与依据（含被否项）**：\n\n| 编号 | 决策 | 被否的选项 | 依据 |\n|---|---|---|---|\n| D-01 | SQLite 单文件（`node:sqlite` 的 `DatabaseSync`） | JSON/NDJSON 文件存储 | 要求「一个数据库实例」；零依赖；实测可用且重开可读 |\n| D-02 | 4+1 张表：`users`/`products`/`orders`/`order_items` + `sessions` | 单表 JSON 快照 | 对齐 `01_` 蓝本 4+1 精神；**关系约束可被测试验证** |\n| D-03 | 服务端会话表 + `HttpOnly` Cookie（`SameSite=Lax`，无 `Secure`） | 前端 JWT、内存会话 | 服务端可即时失效；**无 HTTPS 故不加 `Secure`** |\n| D-04 | `scrypt` + 随机盐 + `timingSafeEqual` | 明文（禁止）、PBKDF2 | 零依赖内置；满足「不得明文」 |\n| D-05 | 端口 **4174** | 4173（最初口误）、随机端口 | 与 R1 的 4173 并存 |\n| D-08 | 视觉改为**苹果官网式高冷克制风** | 亚马逊密集网格 | 课堂观感要求；**属方向变更，须在 SPEC 与决策台账双处留痕** |\n| D-10 | `readOrders`/`appendOrder` **保留函数名**，首参 `storage→db`，领域纯函数不动 | 全部重写存储层 | 保留 R1 接缝，**证明分层有效**；契约变更进对照表 |\n| D-14 | 基线标签 `r1-baseline` 打在 `c1167e0` | 不打卡点 | 让「改了哪些」永远可 diff；支撑课堂对比与回退 |\n| D-16 | **不引入订单状态机**，订单即完成记录 | 加五态状态机 | PRD 未要求；避免范围膨胀 |\n| D-19 | 测试计数由脚本生成唯一文件 | 文档手写计数 | **G6 的根因就是手写漂移** |","gate_outputs":"- 4.5a 语义审查：修 2 处编号矛盾；4.5b 本地脱敏：仅版本号/回环地址误报（HIGH 0 / MEDIUM 0）；4.5c 跨模型：**`unavailable`**（`claude` CLI 实际是同族 `deepseek-v4-flash`，不冒充）。\n- 同族二次审阅两轮均 6.5/10：**采纳 5 项真缺口**（事务边界、令牌哈希、请求体上限、CLI `--db`、确定性排序），残余风险记录在案。\n- 产出 `SPEC.md` 559 行、40 条 AC；后并入 autoplan 修订形成 **v1.1（48 条 AC）**。","takeaway":"**「规格不是复述 PRD」**：这次从代码里抓出了 4 个死链、一个会拦死 API 的 CSP、一个实验性数据库的可用性事实——这些都是 PRD 不会写的。\n\n**第二轮的 5 项补强值得单独讲**：同族审阅只给了 6.5 分（未过 7 分线），提出的问题**成立**，于是追加 D-21～D-26——包括「会话令牌库中存 `sha256(token)`」和「下单主单/明细/扣库存同一事务」。**门禁没通过，但产出被采纳了。**\n\n---","extras":"","gate_results":[]},{"canonical_ring":3,"stage_ring_no":3,"label":"autoplan","en":"autoplan","zh":"四方评审","skill":"/autoplan","lead":"","inputs":"`SPEC.md` v1.0，SHA-256 `FF3BAAFC…074B1B`，559 行（**冻结快照**，评审只针对它）。","analysis":"","decisions":"四阶段串行：CEO → Design → DX → Eng，各一轮。\n\n| 阶段 | 原声评分 | 发现数（严重度分布） | 判定 |\n|---|---:|---|---|\n| CEO | 6.5/10 | 21 条（4 Critical / 6 High / 7 Medium / 3 Low） | FAIL / issues_open |\n| Design | 7.0/10（依 7 维补判） | 8 条（3 High / 5 Medium） | FAIL / issues_open |\n| DX | 5.7/10 | 16 条（2 Critical / 6 High / 6 Medium / 2 Low） | FAIL / issues_open |\n| Eng | 6.5/10 | 16 条（3 High / 7 Medium / 6 Low） | FAIL / issues_open |\n\n原始发现 60 条 → 去重合并为 **42 条义务**。\n\n**四阶段为什么全 FAIL**：FAIL 在 GStack 里是 `issues_open`——**有未关闭问题，不是方案被拒**。这一环的价值不是打分，而是把问题变成带编号、可核对的义务。\n\n**autoplan 阶段的关键决策（含被否项）**：\n\n| 编号 | 决策 | 被否的选项 | 依据 |\n|---|---|---|---|\n| D-33 | 下单幂等：`clientOrderId` + `(user_id, client_order_id)` 唯一，重复请求返回原订单 | 无幂等（原 D-30） | 防双击/重放/未知结果重试导致重复下单；**supersede D-30** |\n| D-34 | 新增 `GET /api/admin/products`（含下架商品） | 仅公开列表 | **下架后管理端无法再操作**，AC-04/05/06 无法闭环 |\n| D-35 | 登出 `DELETE` 服务端会话行；**不做**会话过期 | 加 `expires_at` | FR-2 明确「无会话过期」；登出撤销是必要下限 |\n| D-36 | 工时重估 **15–25 agent 工时**，按 M1–M5 里程碑 | 4.5–5.5 小时（原估） | 原估算与交付面严重不符（CEO F-01/F-02） |\n| D-37 | 错误目录唯一真源：API 用 `{ok:false}`、静态层用 `problem+json` | 两套并行 | 避免三处各写一套 |\n| D-38 | CLI 加 `--json`、**5 档退出码（0/1/2/3/4）**、`--password-stdin` | 仅人类可读、0/1/2 | **agent/脚本必须能稳定消费** |\n| D-40 | 单写者队列 + `busy_timeout` 250–500ms + 异步退避 | 5s + 同步重试 | **防止同步 DB 阻塞整个 HTTP 服务** |\n| D-41 | 图片 fallback：Openverse → Wikimedia → 停止并上报；**禁止 AI 图冒充** | 无 fallback | 单点依赖会阻塞发布 |\n| D-42 | 治理脚本合并为 `scripts/verify.mjs` 单一入口 | 5 个独立入口 | 降低自证成本、便于复现 |\n\n**注意 D-33 与 D-30 的关系**：spec 环曾明确决定「不做幂等键」（D-30），autoplan 的 Eng/DX 视角指出这会留下重复下单风险，于是**用 D-33 推翻 D-30 并标注 `supersede`**。\n\n**决策台账是追加式的**：`docs/decision-log.md` 明确「只追加、不重写」，推翻旧决策时**追加新条目并注明 `superseded`，不删不改旧行**。这是「留痕」从口号变成机制的样子。","gate_outputs":"- 评分：CEO 6.5、Design 7.0、DX 5.7、Eng 6.5；**均 FAIL / issues_open**。接受的修复**不把 FAIL 翻成 PASS**，没有第二轮复审。\n- 用户挑战：**U1 范围与工时**、**U2 访客查单**；终门 `gate_rev=1` 经用户批准（`APPROVED`，U1=A/U2=A）。\n- 四视角原始输出存 `evidence/autoplan-voices/*.txt`，**未删改**。\n\n**两处真实的环境偏差（如实记录）**：\n- Design 视角**第一次偏题**（返回了 CEO 视角），重问一次才拿到设计评审；\n- Eng 视角**第一次返回卡住的元回复**，重问一次才拿到 6.5 分 + 16 条发现；\n- 官方 `gstack-autoplan` 运行件（bun snapshot / plan-reality 工具链）本宿主**未安装**，按技能文档手动执行流程。\n\n- 产出 `DECISIONS.md`：42 条义务（`OB-CEO/DES/DX/ENG-*`）、决策审计表、TODOS、终门。","takeaway":"**「FAIL 不等于重做」**：门禁把 60 条模糊发现收敛成 42 条可验收义务；不把 FAIL 翻成 PASS，也不让项目卡死。\n\n**还有一层**：这一幕同时演示了「听劝」与「拒绝」并存——D-33 推翻了 spec 的决定（听劝），而 U1/U2 两处方向性挑战**没有让 AI 自己拍板，而是上浮给用户**（人类主权）。\n\n---","extras":"","gate_results":[]},{"canonical_ring":4,"stage_ring_no":4,"label":"build","en":"build","zh":"受控施工","skill":"Build","lead":"","inputs":"`SPEC.md` v1.1（SHA-256 `BE00459D…`）+ `DECISIONS.md` 42 条义务。","analysis":"","decisions":"- M1 DB/认证：`node:sqlite`、迁移、种子、scrypt + 盐、会话哈希、单写者队列。\n- M2 订单/API/CLI：事务扣库存、`clientOrderId` 幂等、12 个路由、CLI（dev/db/user/product/orders、`--json`、5 档退出码）。\n- M3/M4 前端与管理端：Apple 式版式、登录/我的订单/查单/管理两面板。\n- M5 视觉/图片/治理：14 张真实照片 + 授权台账 + 文档 + 机械校验脚本。\n\n**商品照片是这一环最费工的部分**：14/14 全部经 `scripts/fetch-product-images.mjs` 从 Openverse 真实下载，JPEG magic 校验、≤300 KiB、SHA-256 入 `evidence/assets-manifest.json`。\n\n**内容缺陷重抓（下载成功 ≠ 内容正确）**：\n\n| 商品 | 首图问题 | 处置 |\n|---|---|---|\n| `cherry` | 抓成「Cherry blossoms（樱花）」 | 重抓为真实甜樱桃 |\n| `golden-pineapple` | 抓成「菠萝表皮特写」 | 重抓为白底整果 |\n| `fuji-apple` | 抓成「听诊器+果盘」 | 重抓 |\n| `banana` | 抓成「果园整串香蕉」 | 重抓 |\n\n累计**重抓 9 次**，最终 5 张改用 Wikimedia Commons。","gate_outputs":"| 命令 | 结果 |\n|---|---|\n| `node --test` | **96 项：96 通过 / 0 失败** |\n| `node scripts/record-test-count.mjs` | `tests=96 pass=96 fail=0` |\n| `node scripts/verify.mjs` | **PASS 5/5**（测试 / 链接 / 编号 / 追溯 / 证据清单） |\n| `node cli.mjs dev` + HTTP 冒烟 | health 200；products 14；login 200；order 201（`FL-20261018-090613-74DY`，合计 3497 分）；mine 1；index 200 |\n\n**G1–G7 全部给出机械形态**（这是 R1 掉队的那一类，见第十一节）：链接检查、哈希清单、契约+分支矩阵、编号检查、唯一计数、合并证据。\n\n**偏离与说明（如实记录，不静默）**：\n1. **R1 旧测试移除**：`tests/order-store.test.mjs`（测已退役的 localStorage 实现）与 `tests/server.test.mjs`（测 R1 服务器形状）已删除，由 `tests/db|api|cli.test.mjs` 替代。\n2. **夹具变更**：`tests/domain.test.mjs` 原导入已退役的 `assets/catalog.mjs`，改为导入 `server/db.mjs` 的 `PRODUCT_SEED`，断言从 10 种改 14 种；**`assets/domain.mjs` 本身未改**。\n3. **两处 fake DOM 测试简化**：数量变更与查单测试原依赖「重渲染后再派发事件」，假 DOM 无法可靠模拟（一次 163 秒内存异常）；已拆成单次提交的等价断言。**真实浏览器行为交 qa 环，未在此声称通过。**\n\n- 产出 `BUILD.md`（AC×OB 双向追溯）、`BUILD-LOG.md`、`evidence/ring-build.md`。","takeaway":"**「义务追溯不是写表」**：`BUILD.md` 同时引用 AC 与 OB，`check-traceability` 能机械核对——R1 掉队的「文档类义务」这次有落点。\n\n**「删测试要留痕」**：删了两个 R1 旧测试，原因是它们测的是已退役的实现。**说明理由、记在证据里**，而不是悄悄删掉——这是 Honest Work 的具体样子。\n\n---","extras":"","gate_results":[{"cells":["node --test","96 项：96 通过 / 0 失败"],"semantic":"pass"},{"cells":["node scripts/record-test-count.mjs","tests=96 pass=96 fail=0"],"semantic":"fail"},{"cells":["node scripts/verify.mjs","PASS 5/5（测试 / 链接 / 编号 / 追溯 / 证据清单）"],"semantic":"pass"}]},{"canonical_ring":5,"stage_ring_no":5,"label":"review","en":"review","zh":"结构排雷与安全审计","skill":"/review + /cso","lead":"","inputs":"build 提交 `66b4a93`。官方 `gstack-review` / `cso` 运行件不可用，手动执行并如实记录。","analysis":"","decisions":"- **结构排雷**：订单列表 N+1（真问题）、幂等竞态、Cookie 解析、健康检查泄露绝对路径、旧会话堆积。\n- **安全审计**：SQL 参数化、XSS sink、路径穿越、水平/垂直越权、口令与会话、HTTP 边界。\n\n**扫描是真实命令，不是\"看了一眼\"**：\n\n| 扫描 | 命令 | 结果 |\n|---|---|---|\n| 危险模式 | `Select-String` 查 `innerHTML\\|eval(\\|new Function\\|child_process\\|execSync\\|spawnSync` | **无命中** |\n| SQL 拼接 | 查反引号内 `${...}` 且含 `SELECT/INSERT/UPDATE/DELETE` | 仅 `products.mjs:58`，**列名来自固定分支，无用户输入拼接** |\n| N+1 | 读 `server/orders.mjs` | 原实现每单调 `itemsForOrder()`；已改 `itemsByOrderIds()` 批量（列表 2 条 SQL） |\n\n**安全探针真实输出**（脚本 `.gstack/sec-probe.mjs`，基于测试夹具启动真实 HTTP 服务）：\n\n```text\nhealth.dbPath = test.db | absolute? false\nsqli      productId → 404 product-not-found\ntraversal           → 404 not-found\nmalformed cookie    → 401 auth-required\nheaders   csp=true nosniff=nosniff no-store=no-store\n```","gate_outputs":"- **6 项 AUTO-FIXED** 直接修（N+1、幂等、Cookie、路径、旧会话、lint）；**7 项 ASK** 经用户确认按 PRD 边界保留。\n- 修后：`node --test` 96/96；`verify.mjs` PASS 5/5；`node --check cli.mjs` 通过。\n- 产出 `review.md` + `evidence/ring-review.md`。","takeaway":"**「CRITICAL 也可能不修，但必须记录」**：会话过期/CSRF/限流是 PRD 明确不做，review 不擅自扩范围；信息泄露与 N+1 这种机械缺陷直接修。\n\n**「机械型直接改、需要权衡的停下问」** 在这环有了可核对的数字：**6 修 / 7 问**。这也是「哪些决策不该由 AI 自己拍板」的量化样本。\n\n---","extras":"","gate_results":[]},{"canonical_ring":6,"stage_ring_no":6,"label":"qa","en":"qa","zh":"实机探索","skill":"/qa","lead":"","inputs":"review 后的代码 + `data/qa.db`，服务跑在 `http://127.0.0.1:4174`。","analysis":"","decisions":"- 真实 Chromium（chrome-devtools），**五档视口**：1440×900 / 1068×900 / 834×900 / 600×900 / 390×844（mobile,touch）。\n- 走「登录→加购→下单→我的订单→越权→管理改价/库存/上下架→查单聚焦→移动端→重启持久化」。\n\n**断点实测（读 `getComputedStyle(#catalog).gridTemplateColumns`）**：\n\n| 视口 | 列数 |\n|---|---|\n| 1440 / 1068 | 4 列 |\n| 834 | 3 列 |\n| 600 | 2 列 |\n| 390 | 1 列 |","gate_outputs":"| 操作 | 真实结果 |\n|---|---|\n| 登录 userA | `session-user = userA` |\n| 苹果×2 + 香蕉×1 | `3 件`、`合计 ¥34.97` |\n| 结账 | `FL-20261018-092347-CEBP`；收据含订单号、本地时间、行小计、合计 |\n| **水平越权**：登出 → userB → 查 userA 订单 | 「该订单属于其他账号，无法查看。」 |\n| 查自己订单（小写+空格） | 「订单已找到。」；`activeElement = lookup-result-title` |\n| 管理改价（红富士 1111 分、库存 5） | 保存成功；公开接口 `unitPriceCents=1111`、`stock=5` |\n| 香蕉下架 | `data-state=已下架`；公开列表 13 条、无香蕉 |\n| kiwi 库存 0 | 卡片 `data-state=sold-out`、显示「已售罄」 |\n| **重启持久化** | 订单仍在 `FL-20261018-092347-CEBP`；kiwi 仍售罄；苹果价格 1111 仍在 |\n\n- **健康分 94**：无 Critical/High；2 Medium（移动导航可发现性、图片授权扩展）、2 Low。\n- 截图 4 张入 `evidence/visual/`；人工无障碍/对比度 `UNVERIFIED`。\n- 产出 `qa-report.md` + `evidence/ring-qa.md`。","takeaway":"**「98 分不等于通过，94 分也一样」**：报告同时写清未测项与降级项。\n\n**品类的坑只能在真实浏览器里看见**：图片「下载成功 ≠ 内容正确」——樱花当车厘子、鸡尾酒当脐橙，这类问题读代码和跑测试都发现不了。\n\n**越权要在真实浏览器里演**：`userB` 查 `userA` 的订单显示「该订单属于其他账号」——**这是 D-32 那个\"接受订单号存在性泄露\"决定的现场效果**（详见第十节）。\n\n---","extras":"","gate_results":[]},{"canonical_ring":7,"stage_ring_no":7,"label":"ship","en":"ship","zh":"发布","skill":"/ship","lead":"","inputs":"全部产物。起始分支 `main` @ `2eb7f27`（qa 环提交）。","analysis":"","decisions":"- 覆盖率审计：**27 条变更路径**，★★★ 19 / ★★ 7 / ★ 1 / **0 未覆盖**；核心链路（db/auth/orders/router）全部 ★★★。\n- 已知缺口如实列出：`serve.mjs parseCliArgs/main` 无直接单测（★）。\n- 文档同步、版本 `2.0.0.0`、CHANGELOG（含 breaking 与 Known Issues）。\n- **禁止从 main 直接发版** → 建 `release/r2-fruitlab-ring6`，发布提交后再 `--no-ff` 合回 main。","gate_outputs":"```text\nnode --test                 # 96 项，96 通过，0 失败\nnode scripts/verify.mjs     # PASS 5/5（测试/链接/编号/追溯/证据清单）\n```\n\n- `r1-fruitlab` 目录**未被触碰**（`git -C r1 status` 干净）。\n- 发布分支保留，可回退。\n- 产出 `VERSION`、`CHANGELOG.md`、`docs/coverage-audit.md`、`evidence/ring-ship.md`。\n\n**不可用项（`requires-remote` / `not-run`）**：\n\n| 项 | 状态 | 原因 |\n|---|---|---|\n| 推送分支 | `requires-remote` | `git remote -v` 为空 |\n| 创建 PR | `requires-remote` | 无远端/无托管平台 |\n| 远端部署 / 金丝雀 / 性能基线 | `requires-remote` | 无部署目标 |\n| 回归证明（红先失败） | `not-run` | 无独立基线环境；本地测试为绿，**不声称做过 red-first** |","takeaway":"**「做不了的事写做不了」**：没有远端就写 `requires-remote`；发布分支门禁真实拦住了「直接改 main」的诱惑。\n\n**注意 `not-run` 与 `requires-remote` 的区别**：前者是\"能做但没做\"，后者是\"环境不具备\"。**两类都要分开写**，不能混成一句\"未完成\"。\n\n---","extras":"","gate_results":[{"cells":["推送分支","requires-remote","git remote -v 为空"],"semantic":"requires-remote"},{"cells":["创建 PR","requires-remote","无远端/无托管平台"],"semantic":"requires-remote"},{"cells":["远端部署 / 金丝雀 / 性能基线","requires-remote","无部署目标"],"semantic":"requires-remote"},{"cells":["回归证明（红先失败）","not-run","无独立基线环境；本地测试为绿，不声称做过 red-first"],"semantic":"not-run"}]},{"canonical_ring":8,"stage_ring_no":8,"label":"retro","en":"retro","zh":"量化复盘","skill":"/retro + /learn","lead":"","inputs":"真实 Git 历史（`r1-baseline..HEAD`），8 个提交（`5432b35` → `c844789`）。","analysis":"","decisions":"| 指标 | 值 |\n|---|---|\n| 提交 | 8（docs 3 / build 1 / review 1 / qa 1 / release 1 / merge 1） |\n| 变更量 | 92 文件，+10,396 / −5,412 |\n| 行数 | source=3701 / test=2475 / docs=3205 |\n| **Test Ratio** | **0.669**（门槛 ≥ 0.20） |\n| 测试数 | 96（R1 62，+34） |\n| 义务 | 42 / 42 closed |\n| G1–G7 | 7 / 7 closed |\n| QA 健康分 | 94 |\n| 覆盖率审计 | 27 路径：19★★★ / 7★★ / 1★ / 0 未覆盖 |\n| 技术债 | 5 项 TODOS + 5 项 Known Issues |\n\n**热点文件（`git log --name-only` 统计）**：`evidence/manifest.json`(4)、`evidence/index.md`(4)、`DECISIONS.md`(3)、`evidence/test-count.txt`(3)、`docs/decision-log.md`(3)。**代码热点是 review 修复的 3 个服务端文件**（`server/auth.mjs`、`server/orders.mjs`、`server/router.mjs`，各 2 次）。","gate_outputs":"- 经验库 `docs/learnings.md`（8 条真实踩坑）；产出 `retro.md` + `evidence/ring-retro.md`。\n\n**返工与降级（真实记录）**：\n- 商品图片**重抓 9 次**；5 张最终改用 Wikimedia Commons。\n- 图片授权扩展为 CC0 / CC BY / CC BY-SA / Public Domain（**对 SPEC §5.8 的降级**）。\n- 2 处 fake DOM 测试简化。\n- 12 张图片短边低于 800px（已逐张记录，**不写成达标**）。","takeaway":"**「复盘不是感想，是算出来的」**：Test Ratio、热点、返工次数全部来自 Git 与证据，不是回忆。\n\n**热点文件本身就是结论**：排在最上面的不是代码，而是 `manifest.json`、`evidence/index.md`、`test-count.txt` 这些**证据文件**——说明**流程成本主要集中在\"留证据\"上**。这个发现只有在真实复盘里才看得见。\n\n---","extras":"","gate_results":[]}]},{"id":"R3","version":"3.0.0.0","order":3,"tagline":"让系统安全地离开本机：Postgres + 分层 + 容器","partial":false,"source_file":"R3/R3-八环讲解记录.md","brief_title":"零、起点与约束","brief":"**输入**：`PRD-R3.md`（commit `9042c10`，替代 office-hours）。它规定四件事：Postgres 化、L1/L2 分层、可部署交付、R2 遗留缺陷收敛，并给出 A1–A16 验收与版本隔离硬约束。\n\n**七环顺序**：spec → autoplan → build → review → qa → ship → retro。\n\n**三条执行约束（沿用 R1/R2，但第三幕有一处关键变化）**：\n\n| # | 约束 | R3 的真实差异 |\n|---|---|---|\n| 1 | 七环依次走完，顺序不可跳过 | 不变 |\n| 2 | 每环产出文件并落盘 | 不变；证据密度比 R2 更高（90 个入清单证据文件，manifest 另计） |\n| 3 | 每环边界停下汇报 | **用户授权执行代理自行审批**：仍逐环产出/检查，但不再等人拍板；“审批”由代理执行并留痕 |\n| 4 | 需拍板的决策列选项与利弊 | 不变；R3 全部写进 `docs/decision-log.md` D-47..D-108 |\n\n**三个目录/版本**：`r1-fruitlab`（4173，永久冻结）、`r2-fruitlab`（4174，自 R3 起冻结）、`r3-fruitlab`（4175，从 R2 `5f4dd87` 克隆，保留历史，`r2-baseline`）。R3 只写自己目录，R1/R2 一行不改。\n\n**R3 的一句话需求**：把 R2 的单机 SQLite 应用升级为 **Postgres + 逻辑三层 + 物理三层 + 可容器化部署** 的版本，同时修掉 R2 补测的 11 个缺陷，并保证三版本并排可演示。\n\n---","summary":"> **R1 证明「一句话需求能变成可运行、可追溯的交付」；R2 证明「已交付的系统能按流程安全升级」；R3 证明「升级后的系统能安全地离开本机」。**\n>\n> spec 先读 32 个耦合点、把「可部署」钉成 70 条 AC；autoplan 四路全 FAIL 但产出 42 条义务；build 用真实 Postgres 重写测试、把三容器跑起来；review 用 codex 独立复核抓出 4 个 High（错误映射、seed 污染、restore 清库、CSRF bootstrap），cso 官方 run 记 `partial`；qa 在 4175 经 Caddy 走完真实购买闭环；ship 出 `3.0.0.0`、tag `v3.0.0.0`、verify 9/9；retro 用 Git 数据算出 138 测试与返工点。\n>\n> **流程的价值不在「自动完成」，而在每个环节都能指出来：这一步做了什么判断、依据是什么、留下了什么、以及哪些没做到。**\n\n---","overview":[["1 spec","SPEC.md（v1.0→v1.1→v1.2）+ evidence/spec-forensics.md","624 + 108"],["2 autoplan","DECISIONS.md（42 条义务）","194"],["3 build","代码 + 138 测试 + BUILD.md + 容器","178（BUILD.md）"],["4 review","review.md + evidence/codex/review-codex.md + evidence/cso-r3/","73 + 98"],["5 qa","qa-report.md + 5 张截图 + 容器证据","64"],["6 ship","VERSION + CHANGELOG.md + docs/coverage-audit.md","108（CHANGELOG）"],["7 retro","retro.md + evidence/ring-retro.md","72 + 60"]],"gate_matrix":[{"ring_label":"spec","mechanism":"语义审查","result_raw":"通过（修 8 项）","semantic":"pass"},{"ring_label":"spec","mechanism":"脱敏扫描（本地等价）","result_raw":"通过（HIGH 0/MEDIUM 0）","semantic":"pass"},{"ring_label":"spec","mechanism":"同族第二智能体复核","result_raw":"通过（10 + 7 条 findings，全部处置）","semantic":"pass"},{"ring_label":"spec","mechanism":"跨模型质量门","result_raw":"unavailable（同族，不冒充）","semantic":"unavailable"},{"ring_label":"autoplan","mechanism":"CEO/Design/DX/Eng","result_raw":"4/4 FAIL / issues_open → 42 义务","semantic":"fail"},{"ring_label":"autoplan","mechanism":"终门","result_raw":"gate_rev=1，代理自审（用户授权）","semantic":"info"},{"ring_label":"review","mechanism":"codex 独立复核","result_raw":"13 findings（4 High）全部修复","semantic":"info"},{"ring_label":"review","mechanism":"官方 /cso","result_raw":"4 findings、partial（离线、helper ABI 3）","semantic":"partial"},{"ring_label":"qa","mechanism":"健康分","result_raw":"95（无 Critical/High）","semantic":"info"},{"ring_label":"ship","mechanism":"覆盖率审计","result_raw":"12/12 路由，0 未覆盖","semantic":"info"},{"ring_label":"ship","mechanism":"发布 tag","result_raw":"v3.0.0.0（本地；无 remote）","semantic":"info"},{"ring_label":"ship","mechanism":"推送/PR/云部署","result_raw":"requires-remote","semantic":"requires-remote"},{"ring_label":"retro","mechanism":"债务/降级账本","result_raw":"见 retro.md §5","semantic":"info"}],"honest_list":[{"item":"跨模型质量门","status":"unavailable","reason":"本机只有 DeepSeek 同族，不换模型充数","semantic":"unavailable"},{"item":"官方 cso 全量扫描器","status":"partial","reason":"离线无 gitleaks/osv/semgrep/trivy profiles；history/stride/data-classification 未评估","semantic":"partial"},{"item":"读屏器 / 对比度仪器 / 完整键盘流程","status":"UNVERIFIED","reason":"无人工受试条件","semantic":"UNVERIFIED"},{"item":"simple 两容器首页 HTML","status":"UNVERIFIED","reason":"只验证 health/容器健康","semantic":"UNVERIFIED"},{"item":"Docker Desktop 原生引擎","status":"UNVERIFIED","reason":"本机仅 WSL Docker","semantic":"UNVERIFIED"},{"item":"云平台部署（M5）","status":"requires-remote","reason":"需账号/令牌","semantic":"requires-remote"},{"item":"发布 tag 推送","status":"requires-remote","reason":"仓库无 remote","semantic":"requires-remote"},{"item":"限流共享存储","status":"未做","reason":"单实例内存实现，重启清零","semantic":"info"},{"item":"本地 HTTPS/TLS","status":"未做","reason":"localhost demo；生产需外部反代 + COOKIE_SECURE=1","semantic":"info"},{"item":"修复后二次 codex 复核","status":"未做","reason":"以回归测试 + verify 作为修复证据（如实记录）","semantic":"info"}],"extras":"## 〇之二、承接 R2：11 个缺陷与 42 条义务的处置\n\nR2 交付了 `2.0.0.0`，同时留下 **11 个已知缺陷**（C-1～C-7、S-1～S-4）与 **42 条已关闭义务**。R3 的 `PRD-R3.md` 第一节就是「起点：R2 交付了什么、留下了什么」——**承接不是从零开始，而是从上一轮的真实状态开始**。\n\n### 11 个缺陷的处置\n\n| 类别 | 缺陷 | R3 处置 |\n|---|---|---|\n| **正确性** C-1～C-7 | `db reset` 假成功、写队列未接入、动态路由 405 不完整、认证与体校验顺序、客户端超时、畸形路径、登录时序 | 全部关闭。`db reset` 改为「先备份 → 事务重建 → 校验」；405 表补全；体协议先于认证 |\n| **安全** S-1～S-4 | 限流缺失、会话过期缺失、CSRF 缺失、越权 403 泄露存在性 | 全部关闭。新增两桶限流（账号桶 + IP 桶）、会话过期与轮换、CSRF 双提交；**他人订单从 403 改为 404**（D-57 supersede R2 的 D-32） |\n\n**两处需要单独讲**：C-2（并发 BUSY）与 S-2（限流桶）在 build 环「看起来已修」，是 review 环的 **codex 独立复核**从实现与测试反推出**只算部分关闭**，才真正修掉的。\n\n> 这演示了一件事：**自己检查自己，通常查不出来。**\n\n### 一处必须讲清的推翻\n\nR2 曾明确决定「他人订单返回 403，接受订单号存在性泄露」（R2 决策 D-32，理由是需要课堂演示水平越权）。R3 改为 **404**，理由是「可部署形态要消除存在性泄露」。\n\n**R3 的 decision-log 里明确写了 `supersede D-32`**——不是悄悄改掉，而是记下「哪一条被哪一条取代」。\n\n> **承接的正确形态**：不是\"上一轮的结论都作数\"，而是\"逐条判断、该延续的延续、该推翻的推翻并留痕\"。\n\n---\n\n## 九、全程决策分工汇总\n\nR3 与 R1/R2 最大的流程差异：**用户把“审批权”授权给了执行代理**。但“谁签字”变了，“什么必须被记录”没变。\n\n| 类别 | R3 的真实例子 | 谁定 |\n|---|---|---|\n| 机械型 | 补 405 表、修 Host 端口、补测试、改文档 | **AI 自主处理** |\n| 需要权衡但可推荐 | Postgres 版本、分层接口、限流桶、测试隔离策略 | **AI 出选项并拍板，写进 decision-log**（用户授权） |\n| 品味型 | 视觉方向沿用 R2 Apple 版式，不重开评审 | **沿用既有决策**，R3 只保回归 |\n| 前提与诚实性 | 跨模型 `unavailable`、cso `partial`、人工无障碍 `UNVERIFIED` | **必须如实写，AI 和人都不许包装** |\n| 范围判断 | 拒绝 CEO 砍 CSRF/simple/N+1；`compose.debug` 降为可选 | **AI 拍板 + 留痕**（PRD 硬约束优先） |\n| 规格变更 | 404 取代 403、`--db`→`--url`、seed 拆分 | **AI 拍板 + SPEC/CHANGELOG/decision-log 三处留痕** |\n| 分类纠错 | C-2/S-2 从“已修”改判“部分关闭”并真修 | **独立复核指出，AI 必须接受并修** |\n\n**贯穿全程的一条线**：R3 的“自动驾驶”不是“降低标准”。每一环仍然要回答：做了什么判断、依据是什么、留下了什么、哪些没做到。\n\n---\n\n## 十一、42 条义务与 11 个 R2 缺陷\n\n- **义务**：`OB-R3-CEO-*` 7 / `OB-R3-DES-*` 6 / `OB-R3-DX-*` 9 / `OB-R3-ENG-*` 13 / `OB-R3-SPEC-*` 7 = **42**，全部 `closed`（`docs/obligations.md`）。\n- **R2 遗留 11 个缺陷点**：C-1..C-7、S-1..S-4 全部关闭；其中 C-2（BUSY/并发）与 S-2（限流桶）是在 review 环被指出“只算部分关闭”后真正修掉的。\n- **本轮新增**：codex review 13 条（4 High）修复；cso 4 条 Low 两条修、两条降级留痕。\n\n---\n\n## 附录 A：四阶段 FAIL 对 R3 的影响（对照 R1）\n\n| 项 | R1 | R3 |\n|---|---|---|\n| 发现项总数 | 43 | **42** |\n| 转为施工义务 | 38 | **42** |\n| 义务实测落实 | 29 / 部分 7 / 未见 2 | **42 / 0 / 0**（BUILD + 测试/证据可核对） |\n| 掉队类别 | 证据包、契约冻结 | 无掉队；降级项仅限外部能力（跨模型/cso/无障碍/云） |\n\n**机制**：评审结论保持 FAIL 不变，发现项转为必须落实的义务带进施工；`DECISIONS.md` 原文“Accepted fixes do not convert a failed review into a pass”。\n\n**R3 的改进**：R1 的“文档类义务没落点”问题，在 R3 用 `F-R3 → OB-R3 → AC-* → 证据路径` 三段双向可查 + `check-traceability` 机械校验补上；42 条义务全部有证据位置。\n\n---\n\n## 附录 B：R1 / R2 / R3 对比\n\n| 指标 | R1 | R2 | R3 |\n|---|---|---|---|\n| 版本 | 1.0.0.0 | 2.0.0.0 | **3.0.0.0** |\n| 测试 | 62（61 通过/1 跳过） | 96 | **138** |\n| 运行形态 | 纯浏览器 + 静态托管 | 服务端 SQLite + API + CLI | **Postgres + L1 三层 + L2 三容器** |\n| 依赖 | 0 | 0 | **1（`pg`）** |\n| 数据 | localStorage | SQLite 单文件 | Postgres volume |\n| 部署 | 本机静态 | 本机单进程 | **Dockerfile ×2 + compose + Caddy + 备份恢复** |\n| 缺口 | 7 项未收敛 | G1–G7 关闭、42 义务 closed | R2 11 缺陷 closed、42 义务 closed、review 13 修 |\n| 门禁 | 八环从零 | 七环升级 | **七环 + codex 独立复核 + 官方 cso** |\n| 审批方式 | 逐环人工 | 逐环人工 | **用户授权代理自审（证据不降级）** |","handoff":{"title":"〇之二、承接 R2：11 个缺陷与 42 条义务的处置","body":"R2 交付了 `2.0.0.0`，同时留下 **11 个已知缺陷**（C-1～C-7、S-1～S-4）与 **42 条已关闭义务**。R3 的 `PRD-R3.md` 第一节就是「起点：R2 交付了什么、留下了什么」——**承接不是从零开始，而是从上一轮的真实状态开始**。\n\n### 11 个缺陷的处置\n\n| 类别 | 缺陷 | R3 处置 |\n|---|---|---|\n| **正确性** C-1～C-7 | `db reset` 假成功、写队列未接入、动态路由 405 不完整、认证与体校验顺序、客户端超时、畸形路径、登录时序 | 全部关闭。`db reset` 改为「先备份 → 事务重建 → 校验」；405 表补全；体协议先于认证 |\n| **安全** S-1～S-4 | 限流缺失、会话过期缺失、CSRF 缺失、越权 403 泄露存在性 | 全部关闭。新增两桶限流（账号桶 + IP 桶）、会话过期与轮换、CSRF 双提交；**他人订单从 403 改为 404**（D-57 supersede R2 的 D-32） |\n\n**两处需要单独讲**：C-2（并发 BUSY）与 S-2（限流桶）在 build 环「看起来已修」，是 review 环的 **codex 独立复核**从实现与测试反推出**只算部分关闭**，才真正修掉的。\n\n> 这演示了一件事：**自己检查自己，通常查不出来。**\n\n### 一处必须讲清的推翻\n\nR2 曾明确决定「他人订单返回 403，接受订单号存在性泄露」（R2 决策 D-32，理由是需要课堂演示水平越权）。R3 改为 **404**，理由是「可部署形态要消除存在性泄露」。\n\n**R3 的 decision-log 里明确写了 `supersede D-32`**——不是悄悄改掉，而是记下「哪一条被哪一条取代」。\n\n> **承接的正确形态**：不是\"上一轮的结论都作数\"，而是\"逐条判断、该延续的延续、该推翻的推翻并留痕\"。\n\n---"},"prompt":{"kind":"手写 PRD","title":"R3 PRD：Postgres 化、三层架构与可部署交付","body":"> **文档定位**：本文替代 R3 的 office-hours 环节。R3 从 **spec** 开始，共 **7 环**：spec → autoplan → build → review → qa → ship → retro。\n> **工作目录**：`D:\\vibecoding\\easyvibe\\r3-fruitlab`（从 R2 的 `5f4dd87` 克隆，保留 R1/R2 完整 Git 历史；标签 `r2-baseline` 标记起点）。\n> **版本目标**：`3.0.0.0`。\n> **一句话**：把 R2 的单机 SQLite 应用升级为 **Postgres + 逻辑三层 + 可容器化部署** 的版本，同时修掉 R2 遗留漏洞，并保证 **R1、R2、R3 三个版本都能独立启动、并排演示**。\n\n---\n\n## 1. 起点：R2 交付了什么、留下了什么\n\n| 项 | 状态 |\n|---|---|\n| 版本 | `2.0.0.0`，96 项测试全绿，QA 健康分 95 |\n| 形态 | Node 22 单进程：静态托管 + `/api` + `node:sqlite` 单文件库；零第三方依赖 |\n| 演示 | R1（4173，冻结）、R2（4174，`node cli.mjs dev`）可并排 |\n| 已知漏洞/债 | codex 复核 6 条（1 High）、官方 `/cso` 补测 4 条；5 项 TODOS；图片授权/尺寸降级；无远端 |\n\n**R2 遗留 findings（R3 必须逐条处置）**：\n\n| 来源 | 严重度 | 问题 |\n|---|---|---|\n| codex | **High** | `db reset` 在 WAL 未 checkpoint / 库被占用时可能“假成功” |\n| codex | Medium | `enqueueWrite` 未接入写路径；BUSY 映射不全；无真实并发/持锁测试 |\n| codex | Medium | 动态路由 405 不完整（`PATCH /api/orders/{num}` 等返回 404） |\n| codex | Medium | 认证检查先于请求体校验，与 SPEC 冻结优先级冲突 |\n| codex | Medium | `api-client` 超时在响应头返回后即清除，响应体卡住时超时失效 |\n| codex | Low | 畸形百分号编码路径参数 → 500；`id` 与 `userId` 形状不一致 |\n| cso | Medium | 登录时序侧信道可枚举用户名 |\n| cso | Medium | 无登录限流/锁定 |\n| cso | Medium | 会话永不过期（除登出不可撤销） |\n| cso | Low | 他人订单 403 泄露订单号存在性（D-32 教学取舍） |\n\n---","source":"R3/PRD-R3.md"},"rings":[{"canonical_ring":1,"stage_ring_no":1,"label":"手写 PRD","en":"office-hours","zh":"需求诊断","skill":"手写 PRD（替代 /office-hours）","lead":"需求已经明确，所以本阶段**不重跑 `/office-hours`**，改用**手写 PRD** 承担第 1 环。第 1 环的产出就是这份 PRD。","inputs":"| 项 | 状态 |\n|---|---|\n| 版本 | `2.0.0.0`，96 项测试全绿，QA 健康分 95 |\n| 形态 | Node 22 单进程：静态托管 + `/api` + `node:sqlite` 单文件库；零第三方依赖 |\n| 演示 | R1（4173，冻结）、R2（4174，`node cli.mjs dev`）可并排 |\n| 已知漏洞/债 | codex 复核 6 条（1 High）、官方 `/cso` 补测 4 条；5 项 TODOS；图片授权/尺寸降级；无远端 |\n\n**R2 遗留 findings（R3 必须逐条处置）**：\n\n| 来源 | 严重度 | 问题 |\n|---|---|---|\n| codex | **High** | `db reset` 在 WAL 未 checkpoint / 库被占用时可能“假成功” |\n| codex | Medium | `enqueueWrite` 未接入写路径；BUSY 映射不全；无真实并发/持锁测试 |\n| codex | Medium | 动态路由 405 不完整（`PATCH /api/orders/{num}` 等返回 404） |\n| codex | Medium | 认证检查先于请求体校验，与 SPEC 冻结优先级冲突 |\n| codex | Medium | `api-client` 超时在响应头返回后即清除，响应体卡住时超时失效 |\n| codex | Low | 畸形百分号编码路径参数 → 500；`id` 与 `userId` 形状不一致 |\n| cso | Medium | 登录时序侧信道可枚举用户名 |\n| cso | Medium | 无登录限流/锁定 |\n| cso | Medium | 会话永不过期（除登出不可撤销） |\n| cso | Low | 他人订单 403 泄露订单号存在性（D-32 教学取舍） |\n\n---","analysis":"**版本隔离（本 PRD 的第一硬约束）**\n\n> **目标：R3 的开发不得影响 R1 与 R2；课堂演示时三个版本都能独立启动、并排对比。**\n> 这是“升级迭代”课程的第三幕，任何版本被污染都等于破坏现场。\n\n### 2.1 目录与冻结\n\n| 版本 | 目录 | 状态 | 启动方式 |\n|---|---|---|---|\n| R1 | `D:\\vibecoding\\easyvibe\\r1-fruitlab` | **永久冻结**，一行不改 | `node serve.mjs` → `4173` |\n| R2 | `D:\\vibecoding\\easyvibe\\r2-fruitlab` | **自 R3 起冻结**（基线 `5f4dd87` / `r2-baseline`） | `node cli.mjs dev` → `4174` |\n| R3 | `D:\\vibecoding\\easyvibe\\r3-fruitlab` | 本轮施工区（从 R2 克隆，保留历史） | `docker compose up --build` → `4175` |\n\n**规则**：\n1. R3 的任何改动**只能**写在 `r3-fruitlab` 内；\n2. 不得把 R3 的 `package.json`、`pg` 依赖、Dockerfile、compose、Postgres 数据写回 R2；\n3. R1/R2 的 Git 工作树必须保持干净（验收会跑 `git status --short`）；\n4. R2 的 bug 不在 R2 里修——在 R3 里修（R2 作为“升级前”展品保留其缺陷与已知问题记录）。\n\n### 2.2 端口、数据与资源命名（避免碰撞）\n\n| 资源 | R1 | R2 | R3 |\n|---|---|---|---|\n| 应用端口 | `4173` | `4174` | **`4175`** |\n| 数据 | 浏览器 `localStorage` | `data/fruitlab.db`（SQLite 文件） | Postgres volume `fruitlab-r3-pgdata`；宿主端口 **`55432`** |\n| 容器/镜像 | 无 | 无 | compose 项目 `fruitlab-r3`；镜像 `fruitlab-r3:3.0.0.0` |\n| 依赖 | 零 | 零 | 仅 `pg`（见 §4.1） |\n\n### 2.3 三版本并排验收\n\n- 同时启动 R1、R2、R3 后：`curl 4173`、`curl 4174`、`curl 4175` 均 200；R3 `/api/health` 含 DB 状态。\n- 三个版本的数据库/存储互不共享；停掉任一不影响其他。\n- 提供 `scripts/start-all.mjs`（R3 内）：按顺序启动 R1/R2/R3 并打印三个 URL；`Ctrl+C` 全部停止；**不修改 R1/R2 文件**。\n\n---\n\n**R3 目标**\n\n| # | 目标 | 说明 |\n|---|---|---|\n| 1 | **数据库 Postgres 化** | 用 Postgres 替代 `node:sqlite`；迁移、种子、事务、连接池、错误码、备份 |\n| 2 | **应用分层** | L1 逻辑三层（router → services → repositories → Postgres）+ 依赖规则测试；L2 物理三层（web + api + db 容器） |\n| 3 | **可部署交付** | Dockerfile + docker compose（app + Postgres，可选 Caddy）；本地容器跑通、健康检查、持久化、备份/恢复 |\n| 4 | **遗留漏洞收敛** | codex/cso 的 10 条 findings 逐条关闭或明确降级 |\n| 5 | **可复测** | 完成后重跑 codex `/review` + 官方 `/cso`，findings 从 open → closed |\n| 6 | **版本隔离** | R1/R2 冻结，R3 独立；三版本可并排演示 |\n\n---\n\n**功能与非功能需求**\n\n### 4.1 Postgres 化与依赖约束\n\n- **数据库**：PostgreSQL **16**（`postgres:16-alpine`，已实测可拉取）。\n- **驱动**：仅允许 `pg`（`node-postgres`，实测 `8.23.1` 可用）作为**唯一运行时依赖**。\n  - 约束变更：从 R2 的「零第三方依赖」正式改为「**除 `pg` 外零依赖**」；必须在 SPEC、README、CHANGELOG、`docs/decision-log.md` 四处留痕，不得悄悄改。\n- **数据迁移**：**不迁移** R2 的 SQLite 演示订单；Postgres 直接建表 + seed（迁移脚本可作为可选教学附加项，不混入主路径）。\n- **Schema**（与 R2 语义对齐，类型 Postgres 化）：\n  - `users(user_id text pk, username citext/text unique, password_hash text, role text check, created_at timestamptz)`\n  - `products(product_id text pk, name, unit, unit_price_cents integer check >=0, stock integer check >=0, listed boolean, image_path, image_alt, description, sort_order)`\n  - `orders(order_id bigint generated always as identity pk, order_number text unique, user_id fk, client_order_id text, subtotal_cents integer, created_at timestamptz, unique(user_id, client_order_id))`\n  - `order_items(... fk orders, product_id fk products, quantity check, unit_price_cents, subtotal_cents)`\n  - `sessions(token_hash text pk, user_id fk, created_at timestamptz, expires_at timestamptz not null)`（新增过期）\n- **连接与事务**：`pg.Pool`；`DATABASE_URL` 环境变量；`BEGIN/COMMIT/ROLLBACK` 用同一 client；连接池上限、`statement_timeout`、`lock_timeout` 可配。\n- **错误映射**：`23505` 唯一冲突（订单号/幂等键）、`40001/40P01` 重试、`53300` 连接耗尽 → 稳定错误码；不得再依赖 SQLite 的 `BUSY` 字符串。\n- **迁移**：启动时执行（幂等）或 `cli db migrate`；`schema_migrations` 表记录版本；`db init/seed/reset/check/backup` 语义按 Postgres 重定义。\n- **备份/恢复**：`pg_dump` / `pg_restore` 脚本与文档；`db reset --yes` 先备份 schema+data，失败必须显式报错（直接修 codex High）。\n\n### 4.2 应用分层（L1 逻辑三层）\n\n```\nHTTP 层        server/router.mjs           只做协议：解析、状态码、信封、Cookie\n应用层         server/services/*.mjs       用例：checkout、lookup、admin、auth session\n数据层         server/repositories/*.mjs   只做 SQL/事务/连接池，不含业务分支\n领域层         assets/domain.mjs            纯函数（保持不变）\n```\n\n- **依赖规则（由测试强制）**：`router` 不得 import `pg` 或 repositories；`services` 不得 import HTTP 对象；`repositories` 不得 import services/router；`domain` 不依赖任何服务端模块。\n- 现有 `server/products.mjs`、`orders.mjs`、`auth.mjs` 拆分为 `services/` + `repositories/`；保留对外行为与错误码契约。\n- 产出 `docs/architecture.md`（含 ASCII 分层图）与 `docs/contracts.md`（更新）。\n\n### 4.3 物理三层（L2 部署拓扑）\n\n- `docker compose` 三服务：\n  - `web`：Caddy（或 Nginx）静态托管 + 反向代理 `/api` → `api`；对外仅暴露 `4175`；\n  - `api`：Node 22 + `pg`，不对外暴露端口（仅 compose 内网）；\n  - `db`：`postgres:16-alpine`，volume 持久化，不对外暴露（调试用宿主 `55432` 可选）。\n- 同源访问（`http://localhost:4175`），避免 CORS；Cookie 仍为同源。\n- 保留“两容器”简化模式（`--profile simple`：api+db，无 web）作为对照。\n- L3（auth 单独服务）与 L4（全量微服务）**不在 R3**，见 §6。\n\n### 4.4 容器与本地部署\n\n- `Dockerfile`（多阶段）：build 阶段 `npm ci`；运行阶段 `node:22-alpine`、非 root 用户、只拷贝必要文件；`HEALTHCHECK` 调 `/api/health`（含 DB ping）。\n- `.dockerignore` 排除 `data/`、`.git/`、`evidence/`、`node_modules` 等。\n- `docker-compose.yml`：app + db（+ web）；`depends_on.condition: service_healthy`；`.env.example`；本地 `.env` 不进 git。\n- 启动/停止/重启持久化/备份恢复，均给出可复制的命令与证据要求。\n- 生产化配置：`PORT`、`DATABASE_URL`、`PUBLIC_URL`、`COOKIE_SECURE`、`DEMO_PASSWORD`（**禁止默认口令上公网**）、日志级别。\n- 单实例声明：Postgres 可多连接，但应用按单实例设计；不做水平扩展（写入一致性仍由事务保证）。\n\n### 4.5 安全补漏（R2 findings + 公网前置）\n\n**必须关闭（机械/正确性）**：`db reset` 假成功、`enqueueWrite`/BUSY 映射（Postgres 下改为 SQLSTATE + 重试）、动态路由 405、认证与体校验优先级（按 SPEC 冻结口径，或显式改口径并测试）、`api-client` 超时覆盖响应体、畸形路径参数 500、`id/userId` 形状统一。\n\n**安全边界（R3 放开，不再沿用 R2 的“明确不做”）**：\n- 会话 `expires_at` + 校验 + 清理；登出/改密撤销；\n- 登录失败限流/退避（内存或 DB 计数，两者取一）；\n- CSRF：同源 `Origin` 校验 + CSRF Token（二选一或组合，写清边界）；\n- 登录时序枚举：缺失用户也执行 dummy scrypt；\n- 403 订单存在性泄露：改为 404 或保留并显式记录（由 spec 的决策点定）；\n- 生产口令必须来自环境变量，禁止默认 `demo1234` 进入任何公开部署。\n\n### 4.6 CLI 与配置\n\n```\nnode cli.mjs dev [--port 4175]           # 本地开发（需 DATABASE_URL，或 compose）\nnode cli.mjs db migrate|seed|check|backup|reset --yes\nnode cli.mjs user|product|orders ...     # 语义不变\n```\n\n- `--db <path>` 废弃，改为 `--url <DATABASE_URL>` 或环境变量；退出码维持 0/1/2/3/4。\n- `serve.mjs` 支持 `--port`、`HOST`、`DATABASE_URL`；`/api/health` 返回 `db: \"up|down\"`、schema 版本、版本号。\n\n### 4.7 测试\n\n- **测试必须跑真实 Postgres**（Docker 容器，端口 55432 或随机）。\n- 隔离策略：每个测试文件/运行创建独立 schema（或 `TRUNCATE`），使用事务回滚；测试结束清理。\n- 现有 96 项测试全部保留/改造；新增：并发下单、同幂等键并发、持锁/超时、405 表驱动、校验优先级、api-client 超时、时序枚举（可断言分支而非时间）、会话过期、限流、CSRF。\n- 测试计数仍以 `scripts/record-test-count.mjs` 为唯一权威；`node --test` 前置条件（Docker）写入 README。\n- `tests/static-scan.test.mjs` 的「无 package.json」断言更新为：**允许 `package.json`，但运行时依赖集合必须恰好是 `{pg}`**。\n\n### 4.8 文档与证据\n\n- 7 环产物：`SPEC.md`、`DECISIONS.md`、`BUILD.md`、`review.md`、`qa-report.md`、`CHANGELOG.md`、`retro.md`。\n- `docs/architecture.md`、`docs/contracts.md`、`docs/api.md`、`docs/error-catalog.md`、`docs/deploy.md`、`docs/backup-restore.md`。\n- `evidence/`：容器构建/启动/健康/重启持久化/备份恢复、codex 复核、官方 cso 复测、三版本并排截图。\n- 义务追溯继续：`OB-*` + `AC-*` 双向引用，`scripts/verify.mjs` 扩展（含 compose 配置检查）。\n\n---\n\n**非目标**\n\n- **不做完整微服务**（auth/orders/products 各自服务+独立库、服务发现、分布式事务）。\n- **不做云平台部署**（Fly/VPS/Vercel/CF）：R3 先交付“镜像 + 本地容器”；平台部署作为 M5 选修，需账号/令牌后再定。\n- 不做 Vercel/Cloudflare 运行时改写（与 Postgres 方向亦冲突：D1 是 SQLite）。\n- 不做 CI/CD、域名/HTTPS 公网证书（本地容器用 `localhost` 即可；平台部署时再补）。\n- 不做水平扩展/读写分离/分库分表；不做多租户。\n- 不做真实支付、物流、退款；不做 R1/R2 的任何修改。\n\n---\n\n**风险**\n\n| # | 风险 | 应对 |\n|---|---|---|\n| 1 | **零依赖约束变更**引发文档/测试/课程口径连锁 | 四处留痕；static-scan 改为“仅 pg”；CHANGELOG 记录 breaking |\n| 2 | 测试从 SQLite 迁到真实 Postgres，基础设施与耗時上升 | Docker compose test 服务；schema 隔离；README 明示前置 |\n| 3 | SQL 方言/事务/错误码差异导致回归 | 逐条改造 + 并发/唯一冲突/重试测试；错误目录同步 |\n| 4 | 端口/容器名/卷与 R1/R2 冲突 | §2.2 固定命名；验收 A4 实跑三版本 |\n| 5 | `db reset`、备份恢复的破坏性 | 强制 `--yes` + `pg_dump` 先备份；失败显式退出 |\n| 6 | 镜像构建联网/供应链 | 锁定 `pg` 版本与 lockfile；镜像固定 `postgres:16-alpine` digest 可记录 |\n| 7 | R2 冻结纪律被破坏 | R3 只写 r3 目录；验收 A1/A2/A16 检查 git status |\n| 8 | 平台部署延后导致 ship 仍 `requires-remote` | 本地容器交付作为 R3 的“可部署”验收；平台部署单独 M5 |\n\n---","decisions":"","gate_outputs":"**验收标准**\n\n| # | 验收项 |\n|---|---|\n| A1 | R1 可独立启动（4173），`r1-fruitlab` Git 工作树干净 |\n| A2 | R2 可独立启动（4174），`r2-fruitlab` Git 工作树干净，仍为零依赖 |\n| A3 | R3 可独立启动（4175，`docker compose up`），`/api/health` 显示 DB up |\n| A4 | R1/R2/R3 同时启动、各自可访问、互不影响；端口/数据/容器名无碰撞 |\n| A5 | Postgres 数据在容器/服务重启后仍在（volume 持久化） |\n| A6 | 运行时依赖恰好 `{pg}`；无其它第三方依赖；文档与 static-scan 一致 |\n| A7 | migrations 与 seed 幂等；`db reset` 失败必须显式报错（codex High 关闭） |\n| A8 | 测试（真实 Postgres）全绿；计数唯一来源；README 写明 Docker 前置 |\n| A9 | L1 分层成立：依赖规则测试通过；router 不含 SQL，repositories 不含业务分支 |\n| A10 | L2 三容器拓扑成立：web/api/db 健康，`/api` 经反代同源可达 |\n| A11 | codex/cso findings 逐条关闭或明确降级并留证 |\n| A12 | 会话过期、登录限流、CSRF、时序枚举四项按 spec 决策实现并测试 |\n| A13 | 容器非 root、healthcheck、优雅停机、日志、`.env` 不入 git、生产口令非默认 |\n| A14 | 备份/恢复可用（`pg_dump`/`pg_restore`），有真实命令与证据 |\n| A15 | 重跑 codex `/review` 与官方 `/cso`，输出新报告；同族/partial 如实标注 |\n| A16 | `3.0.0.0` + CHANGELOG；R1/R2 未被 R3 改动（`git status` 为空） |\n\n---\n\n**里程碑与 7 环映射**\n\n| 里程碑 | 内容 | 对应环 |\n|---|---|---|\n| M0 | PRD/spec：规格、决策、义务清单 | spec |\n| M1 | Postgres 迁移 + L1 分层 + 测试基础设施 | build（前半） |\n| M2 | 安全补漏（findings + 会话/限流/CSRF/时序） | build（后半） |\n| M3 | Dockerfile + compose（app+db，L2 web） + 本地容器验收 | build/ship |\n| M4 | codex `/review` + 官方 `/cso` 复测、qa、ship、retro | review/qa/ship/retro |\n| M5（选修） | Fly/VPS/Vercel(Neon) 平台部署（需账号） | 后续迭代 |\n\n**7 环**：spec（本 PRD 为输入）→ autoplan（四方评审，产出义务）→ build（M1–M3）→ review → qa → ship → retro。每环边界停下汇报，得到许可才流转。\n\n---\n\n**命令与端口速查**\n\n```powershell\n# R1（冻结）\ncd D:\\vibecoding\\easyvibe\\r1-fruitlab; node serve.mjs          # 4173\n\n# R2（冻结）\ncd D:\\vibecoding\\easyvibe\\r2-fruitlab; node cli.mjs dev        # 4174\n\n# R3（本轮）\ncd D:\\vibecoding\\easyvibe\\r3-fruitlab\ndocker compose up --build                                      # 4175\nnode scripts/start-all.mjs                                     # 三版本一起起\n```\n\n| 版本 | URL | 数据 |\n|---|---|---|\n| R1 | http://127.0.0.1:4173 | localStorage |\n| R2 | http://127.0.0.1:4174 | `data/fruitlab.db` |\n| R3 | http://127.0.0.1:4175 | Postgres volume `fruitlab-r3-pgdata`（宿主 55432） |\n\n---\n\n**与 R1/R2 的关系（教学叙事）**\n\n- **R1**：八环从零做出来，证明“一句话需求 → 可运行、可追溯交付”。\n- **R2**：七环做一次真实升级，证明“已交付系统能按流程演进”，并留下 codex/cso 补测发现。\n- **R3**：七环做“**补漏 + 换数据库 + 分层 + 可部署**”，证明“系统能安全地离开本机、进入可部署形态”，并让三个版本**同台可演示**。\n\n> 关键教学点：**升级不是覆盖旧版本**。R1/R2 保留原样，R3 在独立目录演进；每个版本都能单独启动、单独讲解、单独回退。","takeaway":"第 1 环的目的不是产出文档，而是**把「要做什么、不做什么」钉死**。手写 PRD 同样要交代起点、目标、非目标与验收标准——否则后面的环没有判断依据。","extras":"","gate_results":[],"synthetic":true,"source_note":"R3/PRD-R3.md"},{"canonical_ring":2,"stage_ring_no":1,"label":"spec","en":"spec","zh":"规格定型","skill":"/spec","lead":"","inputs":"`PRD-R3.md`、`HANDOFF.md` 第七节、R2 的 `SPEC/DECISIONS/BUILD/review/qa-report/docs/*`、R2 补测报告（codex 6 行/7 缺陷点 + cso 4 条）。","analysis":"第一件事不是写规格，而是**读 R2 代码取证**。产出 `evidence/spec-forensics.md`：逐项记录 **32 个 SQLite 耦合点**（文件:行号 → R3 替代形态 → 受影响测试）。\n\n| 取证点 | R2 现状 | R3 目标 |\n|---|---|---|\n| `server/db.mjs:3` | `DatabaseSync` 同步库 | `pg.Pool` |\n| `server/db.mjs:52-107` | SQLite DDL/`AUTOINCREMENT` | PG DDL + `schema_migrations` |\n| `server/db.mjs:155-161` | `enqueueWrite` 单写者队列（无调用方） | 退役，改 SQLSTATE 重试 |\n| `cli.mjs:142-162` | `db reset` 文件复制+忽略删除失败 | 先备份→事务重建→校验 |\n| `server/router.mjs:106` | 认证先于体校验 | 体协议→405→401→403 |\n| `assets/api-client.mjs:88-113` | 超时在响应头后清除 | 覆盖 body 读取 |","decisions":"| 决策点 | 选择 | 被否的选项 | 依据 |\n|---|---|---|---|\n| D-47 数据库 | PostgreSQL 16 + `pg.Pool` | 保持 SQLite / MySQL | PRD 已定；WSL 端口实证可达 |\n| D-48 依赖 | 运行时恰好 `{pg}` | 零依赖 / ORM | PRD 已定；ORM 引入黑盒与大量依赖 |\n| D-49 数据 | 不迁移 R2 数据，空库 + seed | 写迁移脚本搬数据 | 演示数据可重建，避免“假平滑迁移” |\n| D-50 用户名 | `text UNIQUE` 大小写敏感 | `citext` / lower 索引 | 保持 R2 行为，避免扩展依赖 |\n| D-51 分层 | router→services→repositories，依赖规则用测试强制 | 保持 R2 单体模块 | PRD 目标 2；越层可机械发现 |\n| D-57 越权 | 他人订单 **404** | 保留 403（R2 D-32） | 可部署形态消除存在性泄露（supersede D-32） |\n| D-58 优先级 | 冻结：体协议→405→401→CSRF→403→404→400→409 | 认证优先（R2 实现） | 关闭 codex C-4；体上限 64 KiB 使风险有界 |\n| D-60 测试库 | 真实 PG，每用例独立数据库 | SQLite 临时库 / 共享 schema | 隔离最彻底；连不上 fail fast |\n| D-63 编号 | AC-49 起、D-47 起、`OB-R3-*`、`F-R3-*` | 从 01 重编 | 避免与 R2 冻结编号歧义 |","gate_outputs":"- 语义审查：发现并修正 **8 项**（计数口径、CSRF 登录后补发、反代 IP、容器备份目录、AC-91 范围、WSL 执行现实、优先级顺序、事务边界）。\n- 脱敏：本地 `check-redaction.mjs`，**HIGH 0 / MEDIUM 0**，13 个 WARN 全是回环地址与版本号误报。\n- codex 同族复核（**不是跨模型**）：**10 条 findings**（F-01..F-10，含 23505 事务边界、service 工厂、容器 HOST、DB 身份、SemVer、生产口令、连接池、XFF、测试处置、输入约束），全部并入 v1.1；二轮 N-01..N-07 中 2 个 High 在 autoplan 阶段并入 v1.2。\n- 跨模型质量门：**`unavailable`**——本机只有 DeepSeek 同族（codex 配置 `opencode-go/deepseek-v4.1-flash`），不换模型充数，报告写“missing coverage, not a pass”。\n- 产出 `SPEC.md`（70 条 AC）、`docs/decision-log.md` D-47 起、`evidence/ring-spec.md`、`evidence/spec-quality-gate.md`。\n\n**一次真实的“停下”**：第一轮 codex 复核读到一半，发现 `SPEC.md` 被并发修订，于是停下来问“用哪份快照”。处置：**冻结快照 + SHA-256 写进报告首行**，再让 codex 只针对快照复核。这个规则后来在 review 环复用。","takeaway":"**“可部署不是加个 Dockerfile”**：spec 先把数据库语义、分层边界、安全取舍、验收口径钉死。32 个耦合点里有一半是 R2 测试会直接踩到的——不先取证，build 一定返工。\n\n---","extras":"","gate_results":[]},{"canonical_ring":3,"stage_ring_no":2,"label":"autoplan","en":"autoplan","zh":"四方评审","skill":"/autoplan","lead":"","inputs":"冻结的 `SPEC.md` v1.0（SHA-256 `de78e754...b53b`）+ PRD + 取证 + R2 契约。","analysis":"四路外部声音由 **codex 子代理**提供（CEO / Design / DX / Eng），两批并行；每阶段一轮，不退回重审。原始发现 **42 条**（CEO 7 + DES 6 + DX 9 + ENG 13 + 二轮 N 7），去重合并为 **42 条 `OB-R3-*`**。\n\n**四阶段为什么全 FAIL**：FAIL 在 GStack 里是 `issues_open`——有未关闭问题，不是方案被拒。这一环的价值不是打分，而是把问题变成带编号、可核对的义务。","decisions":"| 决策点 | 选择 | 被否的选项 | 依据 |\n|---|---|---|---|\n| 工时（CEO-01） | **35–45 agent 工时**，M1/M2/M3 各设上限 | 维持 20–30h | 70 AC + 96 测试迁移 + 3 容器不匹配 |\n| 结果型验收（CEO-02） | 新增 AC-106..AC-118 | 只保留机制 AC | 机制全绿不等于用户能用 |\n| R2 课堂演示（CEO-03） | 仓库外**临时 SQLite 文件**，重启不丢 | 内存库（原方案） | 内存库抹掉“SQLite 持久化”教学对照 |\n| 范围裁剪（CEO-05） | **拒绝**砍 CSRF / simple 对照 / N+1 | 按建议砍范围省课时 | 前三项是 PRD 硬约束；`compose.debug.yml` 降可选 |\n| 迁移事务（ENG-02） | `migrate(client)`/`seed(client)`/`resetDatabase(client)` 同 client 同事务 | pool 级 `migrate` | reset 无法同事务；嵌套事务会死锁 |\n| 锁顺序（ENG-03） | 按 `productId` 排序后扣库存 | 按请求顺序 | 反向购物车会形成行锁环 |\n| scrypt（ENG-04） | 异步 `crypto.scrypt` + 信号量 4 + 队列上限 100 | 继续 `scryptSync` | 同步 scrypt 阻塞事件循环 |\n| 限流（ENG-09） | 账号桶 + IP 桶（两桶） | 仅 username+IP | 同 IP 可喷洒账号；单账号多 IP 需账号桶 |\n| 生产/课堂（N-02） | `seedClassroom` 与 `seedProductionAdmin` 拆分 | production 也 seed 3 账号 | 演示账号不能进生产 |\n| 跨模型共识 | **N/A（覆盖缺失）** | 用同族结果替代 | 只有 DeepSeek 家族，不冒充 |","gate_outputs":"- 评分：CEO 6.0、Design 6.0、DX 5.0、Eng 7.0，**4/4 FAIL / issues_open**。\n- 终门：`gate_rev=1`、`APPROVED`（用户授权代理自审）；`build_started=no`。\n- 产出 `DECISIONS.md`：四阶段 findings 表、42 条义务、TODOS、终门；SPEC 升 **v1.2**（§16 优先），新增 **AC-106..AC-118**（结果型 AC、R2 持久化演示、CSRF 恢复、迁移并发等）。","takeaway":"**“FAIL 不等于重做”**：门禁把 42 条模糊意见收敛成 42 条可验收义务；同时把“听劝”与“守住 PRD 硬约束”分开——该拒的拒，并留痕（SPEC §16.3）。\n\n---","extras":"","gate_results":[]},{"canonical_ring":4,"stage_ring_no":3,"label":"build","en":"build","zh":"受控施工","skill":"Build","lead":"","inputs":"`SPEC.md` v1.2 + `DECISIONS.md` 42 条义务。","analysis":"施工顺序按风险从高到低：\n\n| 里程碑 | 内容 | 关键决策 |\n|---|---|---|\n| M1 | Postgres/迁移/分层/测试基础设施 | 先插订单预留幂等键，再按排序扣库存；`23505` 先 ROLLBACK 再回查/重试 |\n| M2 | 安全补漏 + router/serve/cli | 体协议先于 405/401；CSRF 双提交；会话过期/轮换；两桶限流 |\n| M3 | Dockerfile×2 + compose + Caddy + 备份恢复 | api `HOST=0.0.0.0`；Caddy 保留 Host；web 非 root；restore 停写/单事务/校验 |\n\n真实实现细节（值得讲的三处）：\n\n1. **幂等与库存**：事务内先 `INSERT orders` 预留 `(user_id, client_order_id)`，再按 `productId` 字典序扣库存；`23505` 冲突必须整事务回滚后回查/重试，不能在 aborted 事务里继续查（会得到 `25P02`）。\n2. **组合根**：`server/app.mjs` 建池→迁移→按需 seed→构造 services→router；`router` 不 import `pg`/repositories，依赖规则由 `tests/layering.test.mjs` 断言。\n3. **测试基础设施**：`tests/helpers/pg.mjs` 每用例独立数据库；`pgctl.mjs up/status/down` 管测试 Postgres；`--test-concurrency=4`；`record-test-count.mjs` 记录 git 状态 + tree hash。","decisions":"","gate_outputs":"- **128 项测试全绿**（真实 Postgres），后补 review 回归到 **138**；`verify.mjs --full` 9/9 PASS。\n- 容器：\n\n```text\ndocker compose ps\n  fruitlab-r3-api-1  Up (healthy)\n  fruitlab-r3-db-1   Up (healthy)\n  fruitlab-r3-web-1  Up (healthy)\n```\n\n- `GET /api/health` → `{\"ok\":true,\"db\":\"up\",\"schemaVersion\":2,\"seeded\":true,...}`；api/web `id -u`=1000。\n- 持久化/备份恢复：`restart api db`、`down`/`up`、`pg_dump` 备份→删订单→`pg_restore` 恢复，订单均回来（products=14/users=3）。\n- 产出 `BUILD.md`（70 AC × 42 OB）、`docs/architecture.md`/`deploy.md`/`backup-restore.md`/`contracts.md`/`api.md`/`cli.md`、`evidence/ring-build.md`。\n\n**三个真实返工点**：\n\n| 现象 | 根因 | 修复 |\n|---|---|---|\n| 4175 首页 200，`/api/health` 却 403 `host-not-allowed` | Caddy `header_up Host {http.request.host}` 丢端口 | 改 `{http.request.hostport}`，重建 web 镜像 |\n| `node --test` 报 `scripts/test-pg.mjs` 失败 | 文件名匹配 Node 测试发现规则 | 改名 `pgctl.mjs` |\n| 测试跑完进程不退出 | 测试 helper 的 admin 连接未关闭 | 建库后立即 `admin.end()` |","takeaway":"**“测试从 SQLite 迁到真实 Postgres 是重写测试”**：不是改连接串；并发不超卖、同幂等键、反向购物车、advisory lock、reset 回滚，都是这一环真跑出来的。Caddy 的 Host 丢端口，也是容器里才暴露的。\n\n---","extras":"","gate_results":[]},{"canonical_ring":5,"stage_ring_no":4,"label":"review","en":"review","zh":"结构排雷与安全审计","skill":"/review + /cso","lead":"","inputs":"build 提交 `1a56eb0`。","analysis":"两类工作：**逐条判断 R2 的 11 个缺陷是否真正关闭**、**找新问题**。按用户要求，review 与 cso 必须用 codex 独立子代理，不能自审自证。\n\ncodex 结论：**需修**。C-2、S-2 其实只算部分关闭；新增 **13 条 findings**，其中 4 个 High：\n\n| 编号 | 问题 | 为什么 High |\n|---|---|---|\n| F-R3-01 | router 把 SQLSTATE 字符串当应用错误码 | 本应 503 却 500，还可能泄露 SQLSTATE |\n| F-R3-02 | `isSeeded` 不区分 classroom/production | 演示库可被当生产，demo 账号/口令进生产 |\n| F-R3-03 | CLI restore 缺表被当空表 | 可“成功清库”，是数据安全级问题 |\n| F-R3-04 | health 不签发 CSRF cookie | 客户端 bootstrap 恢复路径实际不可用 |\n\n**官方 `/cso`**（WSL launcher，`gstack-cso 3.0.0`）：`start → submit（4 findings）→ finish`，run `1792294626627-4aa9fb56ea93339d`，completeness **partial**；4 条 Low：备份含口令哈希/权限、限流进程内、本地无 TLS、restore 未校验 schemaVersion。","decisions":"| 决策点 | 选择 | 依据 |\n|---|---|---|\n| 4 个 High 是否全修 | **全修**，并补回归测试 | 都会导致错误验收/清库/安全退化 |\n| cso 4 条 Low | 2 修 + 2 降级留痕 | 备份权限、restore 版本可机械修；单实例限流/本地 TLS 属 PRD 边界 |\n| 修复后是否再跑 codex | **未再跑**，以回归测试 + verify 作证据 | 时间成本；但如实写进 retro 的“不足” |\n| 跨模型 | **`unavailable`** | 只有 DeepSeek 同族，不冒充 |","gate_outputs":"- 13 条 codex findings **全部修复并补回归测试**（`tests/review-fixes*.test.mjs`）；4 条 cso 两条修、两条降级。\n- 修后测试从 128 增至 **138**；`verify --full` 9/9；修复提交 `3796260`。\n- 产出 `review.md`、`evidence/ring-review.md`、`evidence/codex/review-codex.md`、`evidence/cso-r3/`。","takeaway":"**“独立复核的价值是它真敢说没关闭”**：C-2/S-2 在 build 环“看起来已修”，codex 从实现与测试反推出没真正闭环；4 个 High 全是会导致错误验收/清库/安全退化的问题。cso 的 `partial` 也如实保留，不写成“全量安全通过”。\n\n---","extras":"","gate_results":[]},{"canonical_ring":6,"stage_ring_no":5,"label":"qa","en":"qa","zh":"实机探索","skill":"/qa","lead":"","inputs":"review 修复后的代码，重新构建镜像并启动 compose 三容器。","analysis":"不是读代码，而是**经真实入口 4175（Caddy）走核心闭环**：登录 → 加购 → 下单 → 我的订单；同时看断点、控制台、网络、移动端。","decisions":"","gate_outputs":"| 项 | 结果 |\n|---|---|\n| 核心闭环（4175/Caddy） | **通过**；订单 `FL-20261018-040437-PDFD` |\n| 断点 | 1440→4 列、834→3 列、390→1 列（computed grid） |\n| 390 横向滚动 | 无（scrollWidth == clientWidth） |\n| 390 紧凑购物袋 | 「1 件 ¥12.99 查看购物袋」可见 |\n| 控制台 | 仅 1 条预期 401（匿名 `/api/auth/me`） |\n| 网络 | 27 请求，除预期 401 外全部 200/201 |\n| 三容器 | healthy；api/web `uid=1000` |\n| 持久化/备份恢复 | restart、down/up、备份→删→恢复均通过 |\n\n**健康分（八类加权）：95**——Console 99 / Visual 90 / Functional 100 / Performance 90（provisional）/ Content 96 / Accessibility 92（provisional）/ UX 96 / Links 100。无 Critical / High。\n\n- 5 张截图入 `evidence/visual/r3-*`；`qa-report.md` + `evidence/ring-qa.md`。\n- 人工无障碍/对比度/完整键盘 `UNVERIFIED`；simple 模式只验证 health，首页 HTML 未验证（如实记录）。","takeaway":"**“客户端 CSRF 必须真过反代”**：只在 Node 测 CSRF 不够；Caddy 的 Host/XFF、Cookie、Origin 任何一层错，购买闭环就断。qa 必须走真实入口，而不是直接打 api 端口。\n\n---","extras":"","gate_results":[{"cells":["核心闭环（4175/Caddy）","通过；订单 FL-20261018-040437-PDFD"],"semantic":"pass"},{"cells":["持久化/备份恢复","restart、down/up、备份→删→恢复均通过"],"semantic":"pass"}]},{"canonical_ring":7,"stage_ring_no":6,"label":"ship","en":"ship","zh":"发布","skill":"/ship","lead":"","inputs":"全部产物 + 修复后的代码。","analysis":"三件事：覆盖率审计、文档同步、版本与变更记录。","decisions":"| 决策点 | 选择 | 依据 |\n|---|---|---|\n| 版本号 | `VERSION=3.0.0.0`；`package.json=3.0.0` | npm 只接受合法 SemVer；4 段→3 段映射由测试机械校验 |\n| 发布方式 | 本地 tag `v3.0.0.0`（最终 `dfd4a78`） | 无 remote，推送/PR `requires-remote` |\n| 覆盖率审计 | **12/12 路由**、16 类横切能力 | 无 ★ 未覆盖项；降级项单独列 |\n| 文档同步 | README、CHANGELOG、docs/*、BUILD/review/qa/retro | 文档与代码同一提交 |","gate_outputs":"```text\nnode scripts/verify.mjs\nPASS preflight --full\nPASS node --test --test-concurrency=4        # 138/138，真实 Postgres\nPASS check-links / check-numbering / check-traceability\nPASS check-redaction / check-docs-stale\nPASS verify-evidence（90 个证据文件）\nPASS check-compose\nPASS: 9/9 项通过（full）\n```\n\n- `git -C ..\\r1-fruitlab status --short` 与 `..\\r2-fruitlab` 均为空；R1 `3087a05`、R2 `5f4dd87` 未被触碰。\n- 产出 `evidence/ring-ship.md`、`docs/coverage-audit.md`、最终 `CHANGELOG.md`。","takeaway":"**“做不了的事写做不了”**：跨模型 `unavailable`、cso `partial`、人工无障碍 `UNVERIFIED`、云平台 `requires-remote`——全部进 CHANGELOG 与报告，不拿“全绿”掩盖覆盖缺口。\n\n---","extras":"","gate_results":[]},{"canonical_ring":8,"stage_ring_no":7,"label":"retro","en":"retro","zh":"量化复盘","skill":"/retro + /learn","lead":"","inputs":"真实 Git 历史（`r2-baseline..HEAD`）与证据。","analysis":"量化：自基线 **9 个提交**（其中 2 个是 PRD/README，7 个是本轮流程）、**152 文件、+15,218/−3,189**；测试 **96→138**；依赖 **0→1（pg）**；容器 0→3；R2 遗留 **11 open→11 closed**；codex review 13 修、cso 4 处置。","decisions":"","gate_outputs":"- `retro.md` + `evidence/ring-retro.md`；最终 tag、测试计数、证据 manifest 全部对齐。\n- 课程 HANDOFF 第七节与课程 README 回写 R3 完成状态。","takeaway":"**“复盘不是感想，是算出来的”**：提交数、文件数、测试数、缺陷关闭数、返工次数都来自 Git/证据；R3 最大的教训是“测试隔离”和“评审前冻结快照”。\n\n---","extras":"### 返工与教训\n\n| 现象 | 根因 | 教训 |\n|---|---|---|\n| 测试偶发失败（1/3） | 测试清理 `dropStaleTestDatabases()` 误删并行测试的库 | **测试清理只动自己的库** |\n| `db reset` 曾“假成功” | 文件复制 + 忽略删除失败 | 先备份、单事务重建、失败显式退出 |\n| 生产库被演示账号污染 | `isSeeded` 只看非空 | seed 模式显式记录（`app_meta.seed_mode`） |\n| restore 可“成功清库” | 缺表按空表处理 | 固定表/列白名单 + schemaVersion + 行数校验 |\n| health 超时不取消查询 | `Promise.race` 只 race 返回值 | 超时 `release(true)` 销毁连接 |\n| 4175 `/api/health` 403 | Caddy 保留 Host 用了 `{http.request.host}` | 用 `{http.request.hostport}` |\n| 390 视口 resize 最小 500 | 浏览器窗口约束 | 用 emulate viewport，不用 resize |","gate_results":[]}]},{"id":"R3.5","version":"3.5.0.0","order":4,"tagline":"不加业务功能，把 R3 变成能发布、能复现的交付版本","partial":true,"source_file":"R3.5/R3.5-讲稿.md","brief_title":"〇、这一幕和前三幕不一样——先把话说清楚","brief":"**R3.5 没有新增任何商城业务功能，也没有走 GStack 的八环。**\n\n它走的是**轻量四环**：spec → build/deploy → review+qa → ship。\n\n**为什么可以压缩？这正是这一幕的教学点。**\n\n前三幕做的是**产品功能**——加持久化、加权限、换数据库、加分层。功能类的活儿风险在\"做错了\"，所以需要**完整八环**把需求、规格、评审、施工、审查、验收一层层卡住。\n\nR3.5 做的是**发布工程**——把已经做好的东西，变成别人也能跑起来的东西。这类活儿风险在\"环境不对、流程没通、文档不全\"，**不在需求理解**。需求是清楚的（\"让学员能复现\"），所以最重的第 1、3 环可以省掉大半。\n\n> **一句话**：**八环不是每个阶段都要全跑。流程是为风险服务的，风险变了，流程的投入也该变。**\n>\n> 但**有一条不随流程缩水**：**没做到的事必须如实写**。下面会看到，R3.5 的\"诚实清单\"一点没比前三幕短。\n\n---","summary":"> **R1 证明「一句话需求能变成可运行、可追溯的交付」；R2 证明「已交付的系统能按流程安全升级」；R3 证明「升级后的系统能安全地离开本机」；R3.5 证明「能跑的系统能变成别人也能跑的系统」。**\n>\n> 这一幕没有写一行业务代码，但它做了四件事：**把仓库公开、把发布自动化、把镜像推出去、把三条学员路径铺好**。而它暴露的五个失败，**没有一个是业务代码问题**——全部来自证书、密钥、分支、镜像源和探活脚本这些\"外围\"环节。\n>\n> **流程的投入该随风险变**：功能类风险要完整八环，发布类风险用轻量四环就够。\n> **但诚实的标准不随流程缩水**：高可用没做、token 没轮换、`verify --full` 没跑——一样一条不少地写在清单上。\n>\n> **流程的价值不在「自动完成」，而在每个环节都能指出来：这一步做了什么判断、依据是什么、留下了什么、以及哪些没做到。**","overview":[["1 spec","PRD + 部署方案 + 决策台账 D-109..D-116","完成"],["2 build/deploy","公开仓库、CI、release workflow、Azure VM、生产 compose/Caddy/备份/回滚","完成"],["3 review+qa","Actions 实跑、TLS、生产登录下单、备份恢复、回滚演练","完成"],["4 ship","tag v3.5.0.0、Docker Hub/GHCR、文档与证据","完成"]],"gate_matrix":[{"ring_label":"spec","mechanism":"决策台账 D-109..D-116","result_raw":"完成","semantic":"info"},{"ring_label":"build/deploy","mechanism":"CI（Node 22 + PG 16）","result_raw":"通过（修复 npm 源后）","semantic":"pass"},{"ring_label":"review+qa","mechanism":"TLS 签发","result_raw":"通过（去掉 invalidContact 邮箱后）","semantic":"pass"},{"ring_label":"review+qa","mechanism":"生产冒烟","result_raw":"通过（含\"演示账号不进生产\"的反向验证）","semantic":"pass"},{"ring_label":"review+qa","mechanism":"备份恢复演练","result_raw":"通过（2 → 0 → 2）","semantic":"pass"},{"ring_label":"review+qa","mechanism":"回滚演练","result_raw":"通过（3.5.0.0 → 3.0.0.0 → 3.5.0.0）","semantic":"pass"},{"ring_label":"ship","mechanism":"tag 推送 / Release","result_raw":"通过","semantic":"pass"},{"ring_label":"——","mechanism":"高可用 / token 轮换 / verify --full","result_raw":"未做，如实记录","semantic":"info"}],"honest_list":[{"item":"高可用","status":"未做","reason":"单 VM，部署窗口有短暂中断","semantic":"info"},{"item":"Docker Hub token","status":"未轮换","reason":"用户决定；仅存于 GitHub Secret","semantic":"info"},{"item":"PaaS / K8s / 多架构 / ACR 同步","status":"未做","reason":"明确不在本轮范围","semantic":"info"},{"item":"CI 跑 verify --full","status":"未做","reason":"CI 只跑 --quick","semantic":"info"},{"item":"Azure / 阿里云 Demo 资源","status":"已删除","reason":"验证完即释放；本文所有线上地址均为历史记录，不要现场访问","semantic":"info"},{"item":"公开仓库含教学证据与课程信息","status":"已按决定 public","reason":"已补 LICENSE","semantic":"info"}],"extras":"## 〇之二、承接 R3：交付了什么、还差什么\n\nR3 交付了 `3.0.0.0`——Postgres + 逻辑三层 + 物理三层 + 容器化 + 备份恢复。**但它仍停在\"本机能跑\"。**\n\n### R3 交付了什么\n\n| 项 | 状态 |\n|---|---|\n| 数据层 | PostgreSQL 16，迁移/种子/事务/连接池 |\n| 应用分层 | L1 逻辑三层（router → services → repositories），依赖规则由测试强制 |\n| 物理形态 | L2 三容器（web + api + db），健康检查、非 root |\n| 测试 | 138 项，真实 Postgres |\n| 缺陷 | R2 遗留 11 个全部关闭；codex 复核 13 条全部修复 |\n\n### R3 还差什么（R3.5 的全部工作）\n\n| 缺口 | 具体表现 |\n|---|---|\n| **没有远端仓库** | 只在本地，别人拿不到 |\n| **没有 CI** | 测试靠手工跑 |\n| **镜像靠手工推送** | 没有自动化发布流水线 |\n| **没有真实公网部署** | 没有 TLS、没有域名、没有回滚演练 |\n| **没有学员路径** | 文档是开发视角，学员不知道怎么跑起来 |\n\n> **所以 R3.5 不加一个业务功能。** 它要回答的是：**一个能开发的系统，怎么变成能发布、能复现、能交给别人的系统。**\n\n### 这一轮为什么只跑四环\n\n前三幕做的是**产品功能**，风险在\"做错了\"，所以需要完整八环层层卡住。R3.5 做的是**发布工程**，风险在\"环境不对、流程没通、文档不全\"，**不在需求理解**。\n\n**流程的投入该随风险变**——但**诚实的标准不随流程缩水**（见第八节）。\n\n---\n\n## 一、起点与约束\n\n### 输入\n\n`PRD-R3.5.md` —— 定义范围与非目标。\n\n**非目标写得很硬**：*不引入新业务逻辑*。这句话决定了整幕的边界——R3.5 里任何\"顺手加个功能\"的念头都要被挡住。\n\n### 要解决的四个问题\n\n| # | 问题 | 说白了 |\n|---|---|---|\n| 1 | R3 只在本机能跑 | 别人怎么跑起来？ |\n| 2 | R3 镜像只有本地有 | 国内学员怎么拉到？ |\n| 3 | 学员环境差异大 | 要不要统一给几种可复现的选项？ |\n| 4 | 文档是开发视角 | 学员视角的说明在哪？ |\n\n### 四条执行约束（沿用前三幕）\n\n1. 四环依次走完；\n2. 每环产出文件并落盘；\n3. 每环边界停下汇报；\n4. 需拍板的决策列选项与利弊。\n\n**但第 3 条有一处变化**：审批方式沿用 R3 的**用户授权执行代理自审**。R3 已经证明\"授权不等于降标准\"，R3.5 继续沿用。\n\n### 版本与仓库\n\n| 项 | 值 |\n|---|---|\n| 版本 | `3.5.0.0` |\n| 公开仓库 | `github.com/cloudzun/fruitlab-r3` |\n| 许可证 | 代码 MIT；文档/证据 CC BY-NC-SA 4.0 |\n| 前序版本 | R3 `3.0.0.0`（tag `v3.0.0.0`），R1/R2 **仍然冻结** |\n\n---\n\n## 七、学员复现环境：三种路径\n\n| | **A Killercoda** | **B Linux 虚机 + Docker** | **C 纯本地无 Docker** |\n|---|---|---|---|\n| 安装 | 浏览器 | Docker | Node 22 + PostgreSQL 16 |\n| 持久化 | 否 | 是 | 是 |\n| 适合 | 快速验证 | 长期运行 / 课堂 | 克隆研究 / 二次开发 |\n| 启动 | Gitee compose + override | 同 A | `node cli.mjs dev` |\n\n### 零配置 Demo 开关\n\n`DEMO_ALLOW_ANY_HOST=1` 做三件事：\n\n- **仅非生产生效**（生产仍严格校验）\n- 跳过 Host/Origin 白名单\n- 支持 `127.0.0.1`、局域网 IP、Killercoda、隧道域名\n\n### 网络实测结论（对国内环境特别有用）\n\n| 结论 | 影响 |\n|---|---|\n| 阿里云 ECS 访问 GitHub raw 会 `Connection reset` | 学员主路径改用 **Gitee compose + ACR** |\n| Gitee / ACR 在国内 ECS 可达 | 这是主路径成立的前提 |\n| `start-demo.sh` 依赖 GitHub 可达 | 因此降为**可选**，不是主路径 |\n\n---\n\n## 十、前后对比\n\n| 指标 | R3 | R3.5 |\n|---|---|---|\n| 版本 | `3.0.0.0` | `3.5.0.0` |\n| **新增业务功能** | Postgres + 分层 + 容器 | **无** |\n| 流程 | 八环（后四环用 codex 独立复核） | **轻量四环** |\n| 仓库 | 本地 | **public GitHub + Actions CI** |\n| 镜像 | 本地构建 | **Docker Hub / GHCR / ACR 公开** |\n| 部署 | 本机 compose | **Azure VM + Caddy TLS（已验证后删除）** |\n| 学员路径 | 无 | **A / B / C 三种** |\n| 测试 | 138 | 约 140（R3.5 期间补测，无业务代码改动） |\n| 真实失败 | 3 个返工点（Caddy Host、测试文件名、连接未关） | **5 个部署失败**（Host 白名单、TLS、SSH、分支、npm 源） |\n\n> **测试计数说明**：R3.5 执行期间的记录里同时出现过 138 与 140。两者都对——138 是阶段中期的 CI 值，140 是后续补测后的值。**引用计数时以仓库 `evidence/test-count.txt` 为准。**\n\n---","handoff":{"title":"〇之二、承接 R3：交付了什么、还差什么","body":"R3 交付了 `3.0.0.0`——Postgres + 逻辑三层 + 物理三层 + 容器化 + 备份恢复。**但它仍停在\"本机能跑\"。**\n\n### R3 交付了什么\n\n| 项 | 状态 |\n|---|---|\n| 数据层 | PostgreSQL 16，迁移/种子/事务/连接池 |\n| 应用分层 | L1 逻辑三层（router → services → repositories），依赖规则由测试强制 |\n| 物理形态 | L2 三容器（web + api + db），健康检查、非 root |\n| 测试 | 138 项，真实 Postgres |\n| 缺陷 | R2 遗留 11 个全部关闭；codex 复核 13 条全部修复 |\n\n### R3 还差什么（R3.5 的全部工作）\n\n| 缺口 | 具体表现 |\n|---|---|\n| **没有远端仓库** | 只在本地，别人拿不到 |\n| **没有 CI** | 测试靠手工跑 |\n| **镜像靠手工推送** | 没有自动化发布流水线 |\n| **没有真实公网部署** | 没有 TLS、没有域名、没有回滚演练 |\n| **没有学员路径** | 文档是开发视角，学员不知道怎么跑起来 |\n\n> **所以 R3.5 不加一个业务功能。** 它要回答的是：**一个能开发的系统，怎么变成能发布、能复现、能交给别人的系统。**\n\n### 这一轮为什么只跑四环\n\n前三幕做的是**产品功能**，风险在\"做错了\"，所以需要完整八环层层卡住。R3.5 做的是**发布工程**，风险在\"环境不对、流程没通、文档不全\"，**不在需求理解**。\n\n**流程的投入该随风险变**——但**诚实的标准不随流程缩水**（见第八节）。\n\n---"},"prompt":{"kind":"手写 PRD","title":"PRD-R3.5：部署收口与 CI/CD","body":"> 版本：`3.5.0.0`（小版本，不改业务模型）\n> 输入：R3 `3.0.0.0`、`R3.5-部署与CI-CD方案.md`、用户确认的 6 项决策（public repo / 沿用 Docker Hub token / Azure VM / 暂不做 PaaS / 同时推 GHCR / 轻量四环）。\n> 状态：实施中（2026-10-19）。\n\n## 1. 背景\n\nR3 已具备 Postgres + 三层 + 三容器 + 备份恢复，但仍停在“本机能跑”：\n没有远端仓库、没有 CI、镜像靠手工推送、没有真实公网部署与回滚流程。\nR3.5 只补这一层，让 R3 成为“可交付、可复现、可回滚”的部署版本。","source":"R3.5/PRD-R3.5.md"},"rings":[{"canonical_ring":1,"stage_ring_no":1,"label":"手写 PRD","en":"office-hours","zh":"需求诊断","skill":"手写 PRD（替代 /office-hours）","lead":"需求已经明确，所以本阶段**不重跑 `/office-hours`**，改用**手写 PRD** 承担第 1 环。第 1 环的产出就是这份 PRD。","inputs":"R3 已具备 Postgres + 三层 + 三容器 + 备份恢复，但仍停在“本机能跑”：\n没有远端仓库、没有 CI、镜像靠手工推送、没有真实公网部署与回滚流程。\nR3.5 只补这一层，让 R3 成为“可交付、可复现、可回滚”的部署版本。","analysis":"**目标**\n\n1. public GitHub 仓库（唯一源）+ LICENSE + 分支/tag 规则。\n2. CI：push/PR 自动跑 138 项测试 + 机械校验。\n3. 镜像发布：tag 触发，Docker Hub + GHCR，记录 digest；版本 tag 不复用。\n4. Azure VM 生产部署：Docker + 宿主机 Caddy 自动 HTTPS + 生产 compose。\n5. 部署流水线：GitHub Actions SSH → VM；部署前备份、健康检查、失败自动回滚。\n6. 完整记录：PRD、docs、evidence、retro，可复盘。\n\n**范围**\n\n- 仓库：`cloudzun/fruitlab-r3`（public）；代码 MIT，文档/证据 CC BY-NC-SA 4.0。\n- CI：`.github/workflows/ci.yml`。\n- 发布：`.github/workflows/release.yml`（tag `v3.5.*` / 手动）。\n- 部署资产：`deploy/vps/`（compose、Caddyfile、backup/restore/deploy/rollback、systemd）。\n- 部署环境：Azure VM（Ubuntu 24.04，`Standard_B2s`，`eastasia`），Docker + host Caddy。\n- 文档：`docs/ci-cd.md`、`docs/deploy-azure.md`。\n\n**非目标**\n\n- 订单取消/退款、审计日志、分页、scrypt 升级等业务功能；\n- PaaS（Railway/Render/Fly/Zeabur）；\n- Kubernetes/Helm、Vercel/Workers；\n- 多架构镜像、多可用区、蓝绿/金丝雀；\n- 阿里云 ACR / 大陆备案（后续可选）。\n\n**风险与已知限制**\n\n- 单 VM，无高可用；部署窗口短暂中断。\n- Docker Hub token 未轮换（用户决定）；只存 GitHub Secret，风险已知。\n- Azure VM 产生费用；演示后应 `az vm deallocate`。\n- 大陆访问 Azure 香港节点受网络影响；后续可加 ACR。\n- CI 目前为 tests + `verify --quick`；`verify --full` 需要 Docker，后续可加。\n- 生产首启必须空卷；复用开发卷会被 `classroom-data-present` 拒绝。","decisions":"","gate_outputs":"**验收标准**\n\n| # | 标准 | 证据 |\n|---:|---|---|\n| 1 | public repo，main + `v3.0.0.0` + `v3.5.0.0` | GitHub URL / `gh release list` |\n| 2 | PR/push CI 绿，138/138 | Actions run |\n| 3 | tag 推送后 Docker Hub + GHCR 各有 api/web 两镜像，digest 记录 | Actions artifact / 本地 inspect |\n| 4 | `https://<domain>/api/health` 返回 `version=3.5.0.0`、`db=up` | curl 输出 |\n| 5 | HTTP→HTTPS、证书有效、HSTS | curl -I / 浏览器 |\n| 6 | 生产仅 admin，无 userA/userB | 登录测试 |\n| 7 | 部署前备份存在；备份恢复后数据回来 | `backup.sh`/`restore.sh` 输出 |\n| 8 | 健康检查失败自动回滚上一版 | `deploy.sh` 演练 |\n| 9 | 仓库无 `.env`/token/私钥；workflow 日志无 secret | secret scan / 检查 |\n| 10 | 文档可复现 | docs 链接 |\n\n**实施顺序**\n\n1. public repo + LICENSE + CI；\n2. R3.5 部署资产 + 版本 3.5.0.0；\n3. Azure VM + Docker/Caddy；\n4. release workflow 推 Docker Hub/GHCR；\n5. VM 手工部署验证；\n6. deploy workflow + 回滚/备份演练；\n7. docs/evidence/retro。","takeaway":"第 1 环的目的不是产出文档，而是**把「要做什么、不做什么」钉死**。手写 PRD 同样要交代起点、目标、非目标与验收标准——否则后面的环没有判断依据。","extras":"","gate_results":[],"synthetic":true,"source_note":"R3.5/PRD-R3.5.md"},{"canonical_ring":2,"stage_ring_no":1,"label":"spec","en":"spec","zh":"规格定型","skill":"/spec","lead":"","inputs":"`PRD-R3.5.md`，以及 R3 的全部产物与证据。","analysis":"","decisions":"| 决策 | 选择 | 依据 |\n|---|---|---|\n| 学员环境形态 | **给三种（A/B/C），不押注一种** | 学员机器条件不同，押一种必然有人跑不起来 |\n| 国内主路径 | **Gitee compose + 阿里云 ACR** | 实测发现国内 ECS 访问 GitHub raw 会 `Connection reset` |\n| Demo 与生产的开关 | **`DEMO_ALLOW_ANY_HOST=1`，且仅非生产生效** | 要支持外部地址访问，但**不能把口子带进生产** |\n| 域名与 TLS | 国内 Demo 用 **IP + 端口 + HTTP**，不做域名/TLS/ICP | 演示用，不值得为它走备案 |\n| 许可 | 代码 MIT / 文档证据 CC BY-NC-SA 4.0 | 代码可复用，材料保留署名 |","gate_outputs":"","takeaway":"**\"给学员的部署方案\"和\"给生产的部署方案\"是两件事。** 生产要安全（严格 Host/Origin 校验、Cookie Secure、管理员口令），学员 Demo 要好启动（零配置、任何地址可访问）。R3.5 的做法是**用一个开关隔开**，并写死\"仅非生产生效\"。\n\n---","extras":"### 做什么\n\n不是写功能规格，而是**写发布方案**：仓库怎么公开、CI 怎么配、镜像推哪、部署形态选什么、学员走哪条路。产出决策台账 `D-109` 至 `D-116`。","gate_results":[]},{"canonical_ring":4,"stage_ring_no":2,"label":"build/deploy","en":"build","zh":"受控施工","skill":"Build","lead":"","inputs":"发布方案 + R3 代码。","analysis":"| 类别 | 内容 |\n|---|---|\n| 公开仓库 | `cloudzun/fruitlab-r3`（public），补 `LICENSE` 与 `LICENSE-DOCS` |\n| CI | `.github/workflows/ci.yml`：Node 22 + PostgreSQL 16 service + 测试 + `verify --quick` |\n| 发布流水线 | `.github/workflows/release.yml`：支持 tag `v3.5.*` 与手动 dispatch |\n| 镜像 | 推 Docker Hub 与 GHCR；另备阿里云 ACR |\n| 部署 | Azure VM 一键脚本 + 生产 compose + Caddy + 备份/回滚 |\n| 学员路径 | `deploy/student/` 两套 compose（Docker Hub / ACR）+ `start-demo.sh` |\n\n**五个失败，没有一个是\"代码错了\"。全部是环境与流程问题。**\n\n| # | 失败现象 | 根因 | 修复 |\n|---|---|---|---|\n| 1 | `deploy.sh` 健康检查报 `host-not-allowed` | 在内网用 `curl 127.0.0.1:4175`，Host 不在白名单 | `wait-health.sh` 带上 `Host: <PUBLIC_URL host>` |\n| 2 | Caddy TLS 握手失败 | Caddyfile 里 `email admin@example.com` 被 Let's Encrypt 判 `invalidContact`；换 ZeroSSL 又超时 | 去掉 email，清 Caddy ACME 状态，重启后签发成功 |\n| 3 | GitHub deploy SSH 失败 | `VPS_KNOWN_HOSTS` secret 与 runner 写入格式不一致 | deploy 时用 `ssh-keyscan` 现场取 host key |\n| 4 | 首次 dispatch 报 404 | workflow 只在 `release/r3.5` 分支，不在默认分支 | 合并到 `main` 后 dispatch |\n| 5 | CI `npm ci` 报 504 | npmmirror 在 runner 上超时 | lockfile 的 `resolved` 改回 `registry.npmjs.org` |","decisions":"","gate_outputs":"","takeaway":"**\"本地能跑\"和\"能发布\"之间隔着一整条链路——而这条链路的坑，几乎都不在业务代码里。**\n\n第 1 条尤其典型：应用本身没问题，是**探活脚本没带对 Host 头**。第 2 条是**证书签发的第三方校验**。第 3 条是**密钥格式**。第 4 条是**分支策略**。第 5 条是**镜像源可达性**。\n\n**这五条没有一条能靠\"多写测试\"发现。** 它们只能靠**真的部署一次**才发现——这就是为什么发布环节不能省。\n\n---","extras":"","gate_results":[]},{"canonical_ring":5,"stage_ring_no":3,"label":"review + qa","en":"review","zh":"结构排雷与安全审计","skill":"/review + /cso","lead":"","inputs":"已部署的生产环境 + CI 流水线。","analysis":"| 验证项 | 结果 |\n|---|---|\n| GitHub Actions 实跑 | 多次 success（含修复 npm 源后的 138/138） |\n| TLS | Let's Encrypt 签发成功；HTTP 308 → HTTPS；HSTS |\n| 生产冒烟 | `health` 返回 `version=3.5.0.0`；admin 登录 200；**userA 登录 401**（生产只有 admin） |\n| 下单 | `create_order=201`，订单号 `FL-20261018-232521-D2QC` |\n| 备份/恢复 | `before=2 → after_delete=0 → after_restore=2`，health 正常 |\n| 回滚 | `3.5.0.0 → 3.0.0.0` → `rollback.sh` → 回到 `3.5.0.0` |\n\n**生产口令**放在 VM 的 `.env.production`（权限 600），**未进仓库、未进日志**。","decisions":"","gate_outputs":"","takeaway":"**\"生产验证要验反面，不只是验正面。\"**\n\n生产冒烟里有两条是**验\"不该发生的事\"**：\n- `userA` 登录返回 **401** —— 证明演示账号**没有**被带进生产\n- 回滚演练**真的回滚了一次** —— 证明回滚脚本管用，而不是\"写了但没试过\"\n\n**备份和回滚这类东西，不演练等于没有。** 出事的时候才发现脚本有问题，是最贵的失败。\n\n---","extras":"","gate_results":[]},{"canonical_ring":7,"stage_ring_no":4,"label":"ship","en":"ship","zh":"发布","skill":"/ship","lead":"","inputs":"","analysis":"","decisions":"","gate_outputs":"| 项 | 值 |\n|---|---|\n| 版本 | `3.5.0.0`，tag `v3.5.0.0`（已推送） |\n| 镜像 | Docker Hub `chengzh/fruitlab-r3:3.5.0.0`、`chengzh/fruitlab-r3-web:3.5.0.0` |\n| 镜像 digest | api `sha256:14c9b5bb…9606` / web `sha256:121a2bc3…c7cc` |\n| ACR | 阿里云杭州三个仓库**公开**，学员匿名可拉，不需要阿里云账号 |\n| 发布 run | `39176757030` |","takeaway":"**\"公开镜像\"这件事比听起来重要。** 学员不需要在你机器上、不需要阿里云账号、不需要登录——**一条命令就能拉起整套系统**。这是\"可复现\"从口号变成事实的那一步。\n\n---","extras":"","gate_results":[]}]}],"cross_ring_matrix":[{"ring":1,"en":"office-hours","zh":"需求诊断","skill":"/office-hours","by_stage":{"R1":{"present":true,"takeaway":"**\"一句话需求进得去，可开工的规格出得来。\"** 关键是它没有直接开工，而是先问清了目标模式、受众、边界，并且**如实承认了一个自己没验证过的假设**。\n\n---","gate_results":[]},"R2":{"present":true,"takeaway":"第 1 环的目的不是产出文档，而是**把「要做什么、不做什么」钉死**。手写 PRD 同样要交代起点、目标、非目标与验收标准——否则后面的环没有判断依据。","gate_results":[]},"R3":{"present":true,"takeaway":"第 1 环的目的不是产出文档，而是**把「要做什么、不做什么」钉死**。手写 PRD 同样要交代起点、目标、非目标与验收标准——否则后面的环没有判断依据。","gate_results":[]},"R3.5":{"present":true,"takeaway":"第 1 环的目的不是产出文档，而是**把「要做什么、不做什么」钉死**。手写 PRD 同样要交代起点、目标、非目标与验收标准——否则后面的环没有判断依据。","gate_results":[]}}},{"ring":2,"en":"spec","zh":"规格定型","skill":"/spec","by_stage":{"R1":{"present":true,"takeaway":"**规格的价值在于\"可验收\"**——后面第 6 环的 QA 就是逐条对照这份规格打分的。同时演示了：**当工具报\"我做不到\"时，要检查这个理由是不是真的。**\n\n---","gate_results":[{"cells":["跨模型质量评分","unavailable"],"semantic":"unavailable"}]},"R2":{"present":true,"takeaway":"**「规格不是复述 PRD」**：这次从代码里抓出了 4 个死链、一个会拦死 API 的 CSP、一个实验性数据库的可用性事实——这些都是 PRD 不会写的。\n\n**第二轮的 5 项补强值得单独讲**：同族审阅只给了 6.5 分（未过 7 分线），提出的问题**成立**，于是追加 D-21～D-26——包括「会话令牌库中存 `sha256(token)`」和「下单主单/明细/扣库存同一事务」。**门禁没通过，但产出被采纳了。**\n\n---","gate_results":[]},"R3":{"present":true,"takeaway":"**“可部署不是加个 Dockerfile”**：spec 先把数据库语义、分层边界、安全取舍、验收口径钉死。32 个耦合点里有一半是 R2 测试会直接踩到的——不先取证，build 一定返工。\n\n---","gate_results":[]},"R3.5":{"present":true,"takeaway":"**\"给学员的部署方案\"和\"给生产的部署方案\"是两件事。** 生产要安全（严格 Host/Origin 校验、Cookie Secure、管理员口令），学员 Demo 要好启动（零配置、任何地址可访问）。R3.5 的做法是**用一个开关隔开**，并写死\"仅非生产生效\"。\n\n---","gate_results":[]}}},{"ring":3,"en":"autoplan","zh":"四方评审","skill":"/autoplan","by_stage":{"R1":{"present":true,"takeaway":"**\"四个评审都没通过，方案照样往下走\"**——门禁的作用不是把项目卡死，而是**把问题显式记录在案**。四阶段 FAIL 意味着一堆已知约束要带进施工，而不是\"评分不及格所以重做\"。\n\n---","gate_results":[{"cells":["CEO","7/10","FAIL / issues_open"],"semantic":"fail"},{"cells":["Design","7/10","FAIL / issues_open"],"semantic":"fail"},{"cells":["DX","6/10","FAIL / issues_open"],"semantic":"fail"},{"cells":["Eng","无数字评分","FAIL / issues_open，11 项发现，关键缺口 0"],"semantic":"fail"}]},"R2":{"present":true,"takeaway":"**「FAIL 不等于重做」**：门禁把 60 条模糊发现收敛成 42 条可验收义务；不把 FAIL 翻成 PASS，也不让项目卡死。\n\n**还有一层**：这一幕同时演示了「听劝」与「拒绝」并存——D-33 推翻了 spec 的决定（听劝），而 U1/U2 两处方向性挑战**没有让 AI 自己拍板，而是上浮给用户**（人类主权）。\n\n---","gate_results":[]},"R3":{"present":true,"takeaway":"**“FAIL 不等于重做”**：门禁把 42 条模糊意见收敛成 42 条可验收义务；同时把“听劝”与“守住 PRD 硬约束”分开——该拒的拒，并留痕（SPEC §16.3）。\n\n---","gate_results":[]},"R3.5":{"present":false,"takeaway":"","gate_results":[]}}},{"ring":4,"en":"build","zh":"受控施工","skill":"Build","by_stage":{"R1":{"present":true,"takeaway":"**施工环的产出不是\"代码\"，而是\"代码加一份诚实的自评\"。** 第 3 条那个规格与实现的偏差，是后面第 5 环真正抓到东西的引线。\n\n---","gate_results":[{"cells":["1","验收项 21、22 未通过——缺两个证据文件，入口返回 404"],"semantic":"fail"},{"cells":["5","教学价值仍为 UNVERIFIED"],"semantic":"UNVERIFIED"}]},"R2":{"present":true,"takeaway":"**「义务追溯不是写表」**：`BUILD.md` 同时引用 AC 与 OB，`check-traceability` 能机械核对——R1 掉队的「文档类义务」这次有落点。\n\n**「删测试要留痕」**：删了两个 R1 旧测试，原因是它们测的是已退役的实现。**说明理由、记在证据里**，而不是悄悄删掉——这是 Honest Work 的具体样子。\n\n---","gate_results":[{"cells":["node --test","96 项：96 通过 / 0 失败"],"semantic":"pass"},{"cells":["node scripts/record-test-count.mjs","tests=96 pass=96 fail=0"],"semantic":"fail"},{"cells":["node scripts/verify.mjs","PASS 5/5（测试 / 链接 / 编号 / 追溯 / 证据清单）"],"semantic":"pass"}]},"R3":{"present":true,"takeaway":"**“测试从 SQLite 迁到真实 Postgres 是重写测试”**：不是改连接串；并发不超卖、同幂等键、反向购物车、advisory lock、reset 回滚，都是这一环真跑出来的。Caddy 的 Host 丢端口，也是容器里才暴露的。\n\n---","gate_results":[]},"R3.5":{"present":true,"takeaway":"**\"本地能跑\"和\"能发布\"之间隔着一整条链路——而这条链路的坑，几乎都不在业务代码里。**\n\n第 1 条尤其典型：应用本身没问题，是**探活脚本没带对 Host 头**。第 2 条是**证书签发的第三方校验**。第 3 条是**密钥格式**。第 4 条是**分支策略**。第 5 条是**镜像源可达性**。\n\n**这五条没有一条能靠\"多写测试\"发现。** 它们只能靠**真的部署一次**才发现——这就是为什么发布环节不能省。\n\n---","gate_results":[]}}},{"ring":5,"en":"review","zh":"结构排雷与安全审计","skill":"/review + /cso","by_stage":{"R1":{"present":true,"takeaway":"**\"CRITICAL 也可以不修\"**——严重级别是工具给的，是否在范围内是规格定的。**人在这里的作用不是重复工具的判断，而是判断工具的判断对不对。**\n\n---","gate_results":[]},"R2":{"present":true,"takeaway":"**「CRITICAL 也可能不修，但必须记录」**：会话过期/CSRF/限流是 PRD 明确不做，review 不擅自扩范围；信息泄露与 N+1 这种机械缺陷直接修。\n\n**「机械型直接改、需要权衡的停下问」** 在这环有了可核对的数字：**6 修 / 7 问**。这也是「哪些决策不该由 AI 自己拍板」的量化样本。\n\n---","gate_results":[]},"R3":{"present":true,"takeaway":"**“独立复核的价值是它真敢说没关闭”**：C-2/S-2 在 build 环“看起来已修”，codex 从实现与测试反推出没真正闭环；4 个 High 全是会导致错误验收/清库/安全退化的问题。cso 的 `partial` 也如实保留，不写成“全量安全通过”。\n\n---","gate_results":[]},"R3.5":{"present":true,"takeaway":"**\"生产验证要验反面，不只是验正面。\"**\n\n生产冒烟里有两条是**验\"不该发生的事\"**：\n- `userA` 登录返回 **401** —— 证明演示账号**没有**被带进生产\n- 回滚演练**真的回滚了一次** —— 证明回滚脚本管用，而不是\"写了但没试过\"\n\n**备份和回滚这类东西，不演练等于没有。** 出事的时候才发现脚本有问题，是最贵的失败。\n\n---","gate_results":[]}}},{"ring":6,"en":"qa","zh":"实机探索","skill":"/qa","by_stage":{"R1":{"present":true,"takeaway":"**\"98 分不等于通过。\"** 报告里同时写着 Critical/High 为 0、两个真实问题未修、人工验收未做、无障碍只是临时分。**读 QA 报告要读全，不能只看总分。**\n\n---","gate_results":[{"cells":["核心闭环","通过"],"semantic":"pass"},{"cells":["人工浏览器逐项验收","UNVERIFIED"],"semantic":"UNVERIFIED"}]},"R2":{"present":true,"takeaway":"**「98 分不等于通过，94 分也一样」**：报告同时写清未测项与降级项。\n\n**品类的坑只能在真实浏览器里看见**：图片「下载成功 ≠ 内容正确」——樱花当车厘子、鸡尾酒当脐橙，这类问题读代码和跑测试都发现不了。\n\n**越权要在真实浏览器里演**：`userB` 查 `userA` 的订单显示「该订单属于其他账号」——**这是 D-32 那个\"接受订单号存在性泄露\"决定的现场效果**（详见第十节）。\n\n---","gate_results":[]},"R3":{"present":true,"takeaway":"**“客户端 CSRF 必须真过反代”**：只在 Node 测 CSRF 不够；Caddy 的 Host/XFF、Cookie、Origin 任何一层错，购买闭环就断。qa 必须走真实入口，而不是直接打 api 端口。\n\n---","gate_results":[{"cells":["核心闭环（4175/Caddy）","通过；订单 FL-20261018-040437-PDFD"],"semantic":"pass"},{"cells":["持久化/备份恢复","restart、down/up、备份→删→恢复均通过"],"semantic":"pass"}]},"R3.5":{"present":false,"takeaway":"","gate_results":[]}}},{"ring":7,"en":"ship","zh":"发布","skill":"/ship","by_stage":{"R1":{"present":true,"takeaway":"**\"发版前有一道不允许绕过的门。\"** 同时注意后半段：**做不了的事就写做不了，不假装做了。**\n\n---","gate_results":[{"cells":["测试","62 项（61 通过、0 失败、1 平台跳过）"],"semantic":"pass"}]},"R2":{"present":true,"takeaway":"**「做不了的事写做不了」**：没有远端就写 `requires-remote`；发布分支门禁真实拦住了「直接改 main」的诱惑。\n\n**注意 `not-run` 与 `requires-remote` 的区别**：前者是\"能做但没做\"，后者是\"环境不具备\"。**两类都要分开写**，不能混成一句\"未完成\"。\n\n---","gate_results":[{"cells":["推送分支","requires-remote","git remote -v 为空"],"semantic":"requires-remote"},{"cells":["创建 PR","requires-remote","无远端/无托管平台"],"semantic":"requires-remote"},{"cells":["远端部署 / 金丝雀 / 性能基线","requires-remote","无部署目标"],"semantic":"requires-remote"},{"cells":["回归证明（红先失败）","not-run","无独立基线环境；本地测试为绿，不声称做过 red-first"],"semantic":"not-run"}]},"R3":{"present":true,"takeaway":"**“做不了的事写做不了”**：跨模型 `unavailable`、cso `partial`、人工无障碍 `UNVERIFIED`、云平台 `requires-remote`——全部进 CHANGELOG 与报告，不拿“全绿”掩盖覆盖缺口。\n\n---","gate_results":[]},"R3.5":{"present":true,"takeaway":"**\"公开镜像\"这件事比听起来重要。** 学员不需要在你机器上、不需要阿里云账号、不需要登录——**一条命令就能拉起整套系统**。这是\"可复现\"从口号变成事实的那一步。\n\n---","gate_results":[]}}},{"ring":8,"en":"retro","zh":"量化复盘","skill":"/retro + /learn","by_stage":{"R1":{"present":true,"takeaway":"复盘不是写感想，而是**从真实提交历史里算指标**。数据来源是 Git 本身，不是回忆。","gate_results":[]},"R2":{"present":true,"takeaway":"**「复盘不是感想，是算出来的」**：Test Ratio、热点、返工次数全部来自 Git 与证据，不是回忆。\n\n**热点文件本身就是结论**：排在最上面的不是代码，而是 `manifest.json`、`evidence/index.md`、`test-count.txt` 这些**证据文件**——说明**流程成本主要集中在\"留证据\"上**。这个发现只有在真实复盘里才看得见。\n\n---","gate_results":[]},"R3":{"present":true,"takeaway":"**“复盘不是感想，是算出来的”**：提交数、文件数、测试数、缺陷关闭数、返工次数都来自 Git/证据；R3 最大的教训是“测试隔离”和“评审前冻结快照”。\n\n---","gate_results":[]},"R3.5":{"present":false,"takeaway":"","gate_results":[]}}}]}</script>
+<script>
+(function(){
+  "use strict";
+  var DATA = JSON.parse(document.getElementById("payload").textContent);
+  var state = { stage: DATA.stages[0] ? DATA.stages[0].id : null, ring: null };
+
+  /* ---------- 极简 Markdown 渲染（离线自包含，不引外部库） ---------- */
+  function esc(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+  function inline(s){
+    s = esc(s);
+    s = s.replace(/`([^`]+)`/g, function(_,c){ return "<code>"+c+"</code>"; });
+    s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    s = s.replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(_,t,u){
+      return '<a href="'+u+'" target="_blank" rel="noopener">'+t+"</a>";
+    });
+    return s;
+  }
+  /* ---------- 长内容折叠 ----------
+     页面默认给精简视图；超过阈值的块只露前段，其余收进「展开全文」。
+     内容仍来自记录，只是详略由展示层控制，事实一览仍可展开核对。 */
+  var COLLAPSE_THRESHOLD = 520;
+  var COLLAPSE_PREVIEW   = 300;
+
+  function collapseHtml(html, rawLen){
+    if(!html || rawLen <= COLLAPSE_THRESHOLD) return html;
+    var cut = html.indexOf("</p>", Math.max(0, COLLAPSE_PREVIEW - 80));
+    if(cut < 0) cut = html.indexOf("</table>", Math.max(0, COLLAPSE_PREVIEW - 140));
+    if(cut < 0) return html;
+    cut += 4;
+    var head = html.slice(0, cut);
+    var rest = html.slice(cut);
+    if(!rest.trim()) return html;
+    return head +
+      '<details class="more"><summary>展开全文（约 ' + rawLen + ' 字）</summary>' +
+      '<div class="more-body">' + rest + '</div></details>';
+  }
+
+  function renderMd(src){
+    if(!src) return "";
+    var raw = toStudentVoice(String(src));
+    return collapseHtml(renderMdCore(raw), raw.length);
+  }
+
+  function renderMdCore(src){
+    if(!src) return "";
+    src = toStudentVoice(String(src));
+    var lines = String(src).replace(/\r\n/g,"\n").split("\n");
+    var out = [], i = 0;
+
+    function isTableRow(l){ return /^\s*\|.*\|\s*$/.test(l); }
+    function isSep(l){ return /^\s*\|[\s:\-|]+\|\s*$/.test(l); }
+
+    while(i < lines.length){
+      var ln = lines[i];
+
+      /* 代码块 */
+      if(/^\s*```/.test(ln)){
+        var buf = [];
+        i++;
+        while(i < lines.length && !/^\s*```/.test(lines[i])){ buf.push(lines[i]); i++; }
+        i++;
+        out.push("<pre><code>"+esc(buf.join("\n"))+"</code></pre>");
+        continue;
+      }
+
+      /* 表格 */
+      if(isTableRow(ln) && i+1 < lines.length && isSep(lines[i+1])){
+        var head = ln.trim().replace(/^\||\|$/g,"").split("|").map(function(c){return inline(c.trim());});
+        i += 2;
+        var body = [];
+        while(i < lines.length && isTableRow(lines[i])){
+          body.push(lines[i].trim().replace(/^\||\|$/g,"").split("|").map(function(c){return inline(c.trim());}));
+          i++;
+        }
+        var h = "<table><thead><tr>"+head.map(function(c){return "<th>"+c+"</th>";}).join("")+"</tr></thead><tbody>";
+        h += body.map(function(r){
+          return "<tr>"+r.map(function(c){return "<td>"+c+"</td>";}).join("")+"</tr>";
+        }).join("");
+        out.push(h+"</tbody></table>");
+        continue;
+      }
+
+      /* 引用块 */
+      if(/^\s*>/.test(ln)){
+        var q = [];
+        while(i < lines.length && /^\s*>/.test(lines[i])){
+          q.push(lines[i].replace(/^\s*>\s?/,"")); i++;
+        }
+        out.push("<blockquote>"+renderMd(q.join("\n"))+"</blockquote>");
+        continue;
+      }
+
+      /* 列表 */
+      if(/^\s*([-*+]|\d+\.)\s+/.test(ln)){
+        var ordered = /^\s*\d+\.\s+/.test(ln);
+        var items = [];
+        while(i < lines.length && /^\s*([-*+]|\d+\.)\s+/.test(lines[i])){
+          items.push(lines[i].replace(/^\s*([-*+]|\d+\.)\s+/,"")); i++;
+          /* 续行 */
+          while(i < lines.length && /^\s{2,}\S/.test(lines[i]) && !/^\s*([-*+]|\d+\.)\s+/.test(lines[i])){
+            items[items.length-1] += " " + lines[i].trim(); i++;
+          }
+        }
+        var tag = ordered ? "ol" : "ul";
+        out.push("<"+tag+">"+items.map(function(t){return "<li>"+inline(t)+"</li>";}).join("")+"</"+tag+">");
+        continue;
+      }
+
+      /* 标题：## / ### / #### / ##### */
+      if(/^\s*#{2,6}\s+/.test(ln)){
+        var lvl = ln.match(/^\s*(#{2,6})\s+/)[1].length;
+        var txt = ln.replace(/^\s*#{2,6}\s+/,"");
+        var tag = lvl <= 3 ? "h5" : (lvl === 4 ? "h5" : "h5");
+        out.push("<"+tag+' class="sub-h">'+inline(txt)+"</"+tag+">");
+        i++; continue;
+      }
+
+      /* 分隔线 */
+      if(/^\s*(---|\*\*\*)\s*$/.test(ln)){ out.push("<hr>"); i++; continue; }
+
+      /* 空行 */
+      if(!ln.trim()){ i++; continue; }
+
+      /* 段落 */
+      var p = [];
+      while(i < lines.length && lines[i].trim() &&
+            !/^\s*(```|>|#####|---|\*\*\*)/.test(lines[i]) &&
+            !/^\s*([-*+]|\d+\.)\s+/.test(lines[i]) &&
+            !isTableRow(lines[i])){
+        p.push(lines[i].trim()); i++;
+      }
+      if(p.length) out.push("<p>"+inline(p.join(" "))+"</p>");
+      else i++;
+    }
+    return out.join("\n");
+  }
+
+  /* ---------- 学生视角措辞转换 ----------
+     源记录是面向授课者写的（含若干讲解口吻用词）。
+     网站是学生端，渲染时统一转换，不改动源记录。 */
+  var WORD_MAP = [
+    [/\*\*讲解要点\*\*/g, "**这一步的关键**"],
+    [/### 讲解要点/g, "### 这一步的关键"],
+    [/讲解要点/g, "这一步的关键"],
+    [/课堂讲解用/g, "给学生看"],
+    [/讲课时要强调的点/g, "你要注意的点"],
+    [/讲课时/g, "看的时候"],
+    [/讲解用/g, "阅读用"],
+    [/讲师/g, "你"],
+    [/课堂/g, "学习"],
+    [/备课/g, "复习"]
+  ];
+  function toStudentVoice(s){
+    if(!s) return s;
+    for(var i=0;i<WORD_MAP.length;i++){ s = s.replace(WORD_MAP[i][0], WORD_MAP[i][1]); }
+    return s;
+  }
+
+  /* ---------- 工具 ---------- */
+  function badgeCls(sem){
+    if(sem === "pass") return "b-pass";
+    if(sem === "fail") return "b-fail";
+    if(sem === "unavailable" || sem === "requires-remote" ||
+       sem === "not-run" || sem === "UNVERIFIED" || sem === "partial") return "b-na";
+    return "b-info";
+  }
+  function stageById(id){
+    for(var i=0;i<DATA.stages.length;i++) if(DATA.stages[i].id===id) return DATA.stages[i];
+    return null;
+  }
+  function semLabel(sem){
+    return {pass:"通过",fail:"FAIL",unavailable:"不可用",partial:"部分",
+            "requires-remote":"需远端","not-run":"未跑",UNVERIFIED:"未验证",
+            warn:"注意",info:"记录"}[sem] || sem;
+  }
+
+  /* ---------- 时间轴 ---------- */
+  function renderTrack(){
+    var el = document.getElementById("track");
+    el.innerHTML = DATA.stages.map(function(s){
+      var active = s.id === state.stage ? ' data-active="true"' : "";
+      return '<button class="stop" data-stage="'+s.id+'"'+active+'>'+
+        '<div class="dot"></div>'+
+        '<div class="ver">'+esc(s.version)+'</div>'+
+        '<div class="name">'+esc(s.id)+'</div>'+
+        '<div class="tag">'+esc(s.tagline)+'</div>'+
+      '</button>';
+    }).join("");
+    Array.prototype.forEach.call(el.querySelectorAll(".stop"), function(b){
+      b.addEventListener("click", function(){
+        state.stage = b.getAttribute("data-stage");
+        state.ring = null;
+        renderAll();
+      });
+    });
+  }
+
+  /* ---------- 跑道 ---------- */
+  function renderLane(){
+    var st = stageById(state.stage);
+    document.getElementById("laneTitle").textContent = st.id + " 的八环";
+    document.getElementById("laneNote").textContent =
+      st.partial ? "轻量四环（非完整八环）" : (st.rings.length + " 环");
+
+    var desc = "按 GStack 八环顺序推进；每一环结束必须留下可检查的文件。";
+    if(st.partial){
+      desc = "这一幕没有走完整八环，只跑轻量四环（spec → build/deploy → review+qa → ship）——因为需求已经清楚，风险不在需求理解，而在环境与流程。";
+    }
+    document.getElementById("laneDesc").innerHTML = esc(desc);
+
+    var byRing = {};
+    st.rings.forEach(function(r){ byRing[r.canonical_ring] = r; });
+
+    var el = document.getElementById("rings");
+    el.innerHTML = DATA.canonical_rings.map(function(cr){
+      var r = byRing[cr.ring];
+      var empty = !r;
+      var active = state.ring === cr.ring ? ' data-active="true"' : "";
+      var sem = "";
+      if(r && r.gate_results && r.gate_results.length){
+        sem = r.gate_results[0].semantic;
+      }
+      var badge = (sem && sem !== "info")
+        ? '<span class="badge '+badgeCls(sem)+'">'+esc(semLabel(sem))+'</span>' : "";
+      var synthTag = (r && r.synthetic)
+        ? '<span class="badge b-synth">PRD 替代</span>' : "";
+      var sk = (r && r.skill) ? r.skill : cr.skill;
+      return '<button class="ring" data-ring="'+cr.ring+'"'+active+
+        (empty?' data-empty="true"':'')+'>'+
+        '<div class="n">第 '+cr.ring+' 环</div>'+
+        '<div class="nm">'+esc(cr.zh)+'</div>'+
+        '<div class="sk">'+esc(sk)+'</div>'+
+        badge+synthTag+
+      '</button>';
+    }).join("");
+
+    Array.prototype.forEach.call(el.querySelectorAll(".ring"), function(b){
+      if(b.getAttribute("data-empty") === "true") return;
+      b.addEventListener("click", function(){
+        state.ring = parseInt(b.getAttribute("data-ring"),10);
+        renderAll();
+      });
+    });
+  }
+
+  /* ---------- 详情 ---------- */
+  function renderDetail(){
+    var el = document.getElementById("detail");
+    var st = stageById(state.stage);
+
+    if(state.ring === null){
+      /* 未选环：干净的阶段概览 —— 只有定位与入口，不放结论 */
+
+      var promptBlock = "";
+      if(st.prompt && st.prompt.body){
+        promptBlock =
+          '<div class="block wide prompt-block">'+
+            '<h4>这一轮的起点：'+esc(st.prompt.kind)+'</h4>'+
+            (st.prompt.title && st.prompt.title.indexOf(st.prompt.kind) === -1
+             ? '<div class="prompt-title">'+inline(st.prompt.title)+'</div>' : '')+
+            '<div class="md">'+renderMd(st.prompt.body)+'</div>'+
+            '<div class="prompt-src">来源：'+esc(st.prompt.source)+'</div>'+
+          '</div>';
+      }
+
+      var handoffBlock = "";
+      if(st.handoff){
+        handoffBlock =
+          '<div class="block wide handoff-block">'+
+            '<h4>从上一轮接着做</h4>'+
+            '<div class="md">'+renderMd(st.handoff.body)+'</div>'+
+          '</div>';
+      }
+
+      el.innerHTML = '<div class="detail">'+
+        '<div class="dt-hd"><h3>'+esc(st.id)+' · '+esc(st.version)+'</h3></div>'+
+        '<div class="dt-lead">'+esc(st.tagline)+'</div>'+
+        '<div class="grid2">'+
+          handoffBlock+
+          promptBlock+
+        '</div>'+
+        '<div class="start-hint">'+
+          '<span class="arrow">↓</span> 从上面跑道选一个环节开始看。'+
+          '顺序是：需求诊断 → 规格定型 → 四方评审 → 受控施工 → 结构排雷 → 实机探索 → 发布 → 量化复盘。'+
+        '</div>'+
+        '<div class="roundup" id="roundup">'+
+          '<div class="roundup-hd">这一轮的结果</div>'+
+          (st.summary?'<div class="block wide"><h4>一句话总结</h4><div class="md">'+renderMd(st.summary)+'</div></div>':'')+
+          (st.honest_list && st.honest_list.length ?
+            '<div class="block wide"><h4>没做到的部分（如实记录）</h4>'+
+            '<table class="honest"><thead><tr><th>项目</th><th>状态</th><th>原因</th></tr></thead><tbody>'+
+            st.honest_list.map(function(h){
+              return "<tr><td>"+inline(h.item)+'</td><td><span class="st '+badgeCls(h.semantic)+'">'+
+                esc(h.status)+"</span></td><td>"+inline(h.reason)+"</td></tr>";
+            }).join("")+"</tbody></table></div>" : '')+
+          (st.extras?'<div class="block wide"><h4>补充材料</h4><div class="md">'+renderMd(st.extras)+'</div></div>':'')+
+        '</div>'+
+      '</div>';
+
+      var rb = document.getElementById("roundup");
+      if(rb){
+        var btn = document.createElement("button");
+        btn.className = "roundup-toggle";
+        btn.textContent = "看完八环后展开这一轮的结果";
+        btn.addEventListener("click", function(){
+          var body = rb.querySelectorAll(".block");
+          var open = rb.getAttribute("data-open") === "true";
+          Array.prototype.forEach.call(body, function(b){ b.style.display = open ? "none" : ""; });
+          rb.setAttribute("data-open", open ? "false" : "true");
+          btn.textContent = open ? "看完八环后展开这一轮的结果" : "收起这一轮的结果";
+        });
+        rb.insertBefore(btn, rb.firstChild);
+        var init = rb.querySelectorAll(".block");
+        Array.prototype.forEach.call(init, function(b){ b.style.display = "none"; });
+        rb.setAttribute("data-open", "false");
+      }
+      return;
+    }
+
+    /* 已选环 */
+    var cr = null, r = null;
+    for(var i=0;i<DATA.canonical_rings.length;i++){
+      if(DATA.canonical_rings[i].ring === state.ring){ cr = DATA.canonical_rings[i]; break; }
+    }
+    r = st.rings.filter(function(x){ return x.canonical_ring === state.ring; })[0];
+    if(!r){ el.innerHTML = '<div class="detail"><div class="empty">这一幕没有走第 '+state.ring+' 环。</div></div>'; return; }
+
+    var gatesHtml = "";
+    if(r.gate_results && r.gate_results.length){
+      gatesHtml = '<div class="block wide"><h4>门禁实况</h4><div class="gates">'+
+        r.gate_results.map(function(g){
+          var txt = g.cells.join(" · ");
+          return '<div class="gate"><span class="sem '+badgeCls(g.semantic)+'">'+
+            esc(semLabel(g.semantic))+'</span><span class="txt">'+inline(txt)+"</span></div>";
+        }).join("")+"</div></div>";
+    }
+
+    el.innerHTML = '<div class="detail">'+
+      '<div class="dt-hd">'+
+        '<h3>第 '+cr.ring+' 环 · '+esc(cr.zh)+'</h3>'+
+        '<span class="skillset">'+esc(cr.skill)+'</span>'+
+        '<span class="src">'+esc(st.id)+' · '+esc(r.label)+'</span>'+
+      '</div>'+
+      (r.lead ? '<div class="dt-lead md">'+renderMd(r.lead)+'</div>' : '')+
+      (r.takeaway ? '<div class="keyline"><div class="keyline-hd">这一步的关键</div><div class="md">'+renderMd(r.takeaway)+'</div></div>' : '')+
+      (r.source_note ? '<div class="src-note">本文内容取自 <code>'+esc(r.source_note)+'</code></div>' : '')+
+      '<div class="grid2">'+
+        (r.inputs ? '<div class="block"><h4>输入</h4><div class="md">'+renderMd(r.inputs)+'</div></div>' : '')+
+        (r.analysis ? '<div class="block"><h4>需求分析与判断</h4><div class="md">'+renderMd(r.analysis)+'</div></div>' : '')+
+        (r.decisions ? '<div class="block wide"><h4>决策与依据</h4><div class="md">'+renderMd(r.decisions)+'</div></div>' : '')+
+        (r.gate_outputs ? '<div class="block wide"><h4>门禁与产出</h4><div class="md">'+renderMd(r.gate_outputs)+'</div></div>' : '')+
+        gatesHtml+
+        (r.extras ? '<div class="block wide"><h4>补充材料</h4><div class="md">'+renderMd(r.extras)+'</div></div>' : '')+
+      '</div>'+
+    '</div>';
+  }
+
+  function renderAll(){
+    renderTrack();
+    renderLane();
+    renderDetail();
+  }
+
+  document.getElementById("genAt").textContent = "数据生成 " + DATA.generated_at;
+  document.getElementById("footSrc").innerHTML =
+    "内容来自 <code>" + esc(DATA.source_dir) + "</code> 下的记录文件，由 <code>build/extract.py</code> 自动抽取。" +
+    "本页面为单文件离线版本，不依赖任何外部资源。";
+  renderAll();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>向导样章 · 合同合规审查 · 启动提示词生成器</title>
+<style>
+  :root{
+    --bg:#f7f6f3; --card:#fff; --ink:#1f2328; --muted:#5b6570;
+    --line:#e3e0d8; --accent:#1f6feb; --ok:#1a7f37; --bad:#c0392b; --warn:#9a6700;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.7 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif;}
+  header{background:#11161d;color:#fff;padding:18px 24px}
+  header h1{margin:0;font-size:19px;letter-spacing:.3px}
+  header p{margin:6px 0 0;color:#9aa7b4;font-size:13.5px}
+  main{max-width:900px;margin:0 auto;padding:24px 20px 80px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin-bottom:16px}
+  h2{margin:0 0 10px;font-size:16.5px}
+  .tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:#eef2f7;color:#41505f;margin-right:6px}
+  .muted{color:var(--muted);font-size:14px}
+  .btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:8px;
+       padding:9px 16px;font-size:14.5px;cursor:pointer}
+  .btn:hover{opacity:.88}
+  .btn.ghost{background:transparent;color:var(--ink)}
+  .btn.small{padding:5px 10px;font-size:13px;border-radius:6px}
+  .btn[disabled]{opacity:.45;cursor:not-allowed}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+  .progress{height:6px;background:#e8e5dd;border-radius:99px;overflow:hidden;margin:4px 0 16px}
+  .progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+  .q-title{font-size:17.5px;font-weight:600;margin:0 0 8px}
+  .help{background:#f4f7fb;border-left:3px solid var(--accent);padding:10px 14px;border-radius:0 8px 8px 0;
+        font-size:14.5px;color:#33414f;margin:0 0 14px}
+  .help b{color:#0f1b28}
+  textarea,input[type=text]{width:100%;font:inherit;padding:10px 12px;border:1px solid #cfd6dd;
+        border-radius:8px;background:#fcfcfb;resize:vertical}
+  textarea:focus,input[type=text]:focus{outline:2px solid #b9d1f7;border-color:var(--accent)}
+  .refbox{background:#f6f4ec;border:1px dashed #cfc7b4;border-radius:8px;padding:12px 14px;
+          font-size:14.5px;margin-top:10px;display:none;white-space:pre-wrap}
+  pre{background:#0f141a;color:#e6edf3;padding:14px 16px;border-radius:8px;overflow:auto;
+      font:13px/1.65 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-word}
+  .tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+  .tab{padding:7px 14px;border:1px solid var(--line);border-radius:8px 8px 0 0;background:#efece5;
+       cursor:pointer;font-size:14px}
+  .tab.on{background:#fff;border-bottom-color:#fff;font-weight:600}
+  .check{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .check:last-child{border-bottom:0}
+  .dot{flex:0 0 18px;height:18px;border-radius:50%;margin-top:4px;font-size:11px;color:#fff;
+       display:flex;align-items:center;justify-content:center}
+  .dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)}
+  .check .body{flex:1;min-width:0}
+  .check .body .t{font-size:14.5px;font-weight:600}
+  .check .body .s{font-size:13.5px;color:var(--muted);margin-top:3px}
+  .sugg{font-size:13.5px;background:#fdf3f2;border-left:3px solid var(--bad);padding:8px 12px;
+        margin-top:8px;border-radius:0 6px 6px 0}
+  ul.diff{margin:0;padding-left:20px}
+  ul.diff li{margin:6px 0;font-size:14.5px}
+  .pill{font-size:12px;padding:1px 7px;border-radius:99px;background:#eef2f7;color:#41505f}
+  .pill.warn{background:#fdf1d8;color:var(--warn)}
+  footer{max-width:900px;margin:0 auto;padding:0 20px 40px;color:var(--muted);font-size:13px}
+  .hidden{display:none}
+  @media (max-width:620px){ main{padding:16px 12px 60px} .card{padding:16px} }
+</style>
+</head>
+<body>
+<header>
+  <h1>向导样章 · 合同合规审查</h1>
+  <p>三种载体之三：把教材里的判断，变成"填空 → 生成 → 体检"的动作。全程离线，不联网。</p>
+</header>
+
+<main>
+  <!-- ============ 首页 ============ -->
+  <section id="intro" class="card">
+    <div><span class="tag">换一个不了解项目的人接手，他要看到什么才不用重开讨论？</span></div>
+    <h2>你要产出的一样东西：一段可直接交给智能体的启动提示词</h2>
+    <p class="muted">它不是模板填空，而是把你在教材里做的判断落成文字。七步填完，生成提示词，跑一次<b>红线体检</b>——体检不过，别发给智能体。</p>
+    <ul class="muted">
+      <li><b>第 1–2 步</b>：背景与一句话目标（教材 5.4.1：双引擎四层，先分清哪些交代码）</li>
+      <li><b>第 3 步</b>：接口——输出里必须有出处，这是本场景的命门</li>
+      <li><b>第 4 步</b>：技术栈与关键参数——三类模型各选什么、切块与 top-k 怎么定</li>
+      <li><b>第 5 步</b>：数据现状——语言模型会脑补，数据必须由你交代清楚</li>
+      <li><b>第 6 步</b>：验收——召回与精确率成对报（教材 5.4.4）</li>
+      <li><b>第 7 步</b>：红线与停止条件——决定你后面还有没有把关的机会</li>
+    </ul>
+    <div class="row">
+      <button class="btn" id="startBtn">开始 → 第 1 步</button>
+      <button class="btn ghost" id="initBtn">📋 复制环境初始化提示词（开工前先贴这段）</button>
+      <span class="muted">约 20 分钟｜7 步｜最后自动注入数据、环境与八环节纪律</span>
+    </div>
+  </section>
+
+  <!-- ============ 填表 ============ -->
+  <section id="formView" class="hidden">
+    <div class="card">
+      <div class="progress"><i id="bar"></i></div>
+      <div class="muted" id="stepLabel"></div>
+      <h2 class="q-title" id="qTitle"></h2>
+      <div class="help" id="qHelp"></div>
+      <div id="inputArea"></div>
+      <div class="row">
+        <button class="btn ghost small" id="refBtn">看看这一步的参考答案</button>
+        <button class="btn ghost small" id="prevBtn">← 上一步</button>
+        <span style="flex:1"></span>
+        <button class="btn" id="nextBtn">下一步 →</button>
+      </div>
+      <div class="refbox" id="refBox"></div>
+    </div>
+  </section>
+
+  <!-- ============ 结果 ============ -->
+  <section id="resultView" class="hidden">
+    <div class="card">
+      <h2>第一步 · 红线体检（八项全绿再发出去）</h2>
+      <p class="muted">体检只查"关键判断有没有落成文字"。红项点右侧"补入建议"即可修正。</p>
+      <div id="checkList"></div>
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <div class="tab on" data-tab="mine">我的提示词</div>
+        <div class="tab" data-tab="ref">参考提示词</div>
+        <div class="tab" data-tab="diff">差异清单</div>
+      </div>
+      <div id="tabMine"><pre id="mineOut"></pre></div>
+      <div id="tabRef" class="hidden"><pre id="refOut"></pre></div>
+      <div id="tabDiff" class="hidden"><ul class="diff" id="diffList"></ul></div>
+      <div class="row">
+        <button class="btn" id="copyBtn">复制提示词</button>
+        <button class="btn ghost" id="dlBtn">下载 .md</button>
+        <button class="btn ghost" id="backBtn">← 修改</button>
+        <button class="btn ghost" id="resetBtn">重新开始</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    样章说明：本页是"三种载体"里的交互载体。教材（单元 5.2）负责判断与模板，手册负责操作与验收，本页负责把判断变成可直接使用的指令。离线可用，不收集任何数据。
+  </footer>
+</main>
+
+<script>
+/* ===================== 常量：自动注入块 ===================== */
+const DATA_BLOCK = [
+"【素材与硬校验 · 自动注入】",
+"- 合同：materials/contracts/ 下 30 份合成 docx（CT001–CT030），只读；结构为「章 / 第 X 条 / 段」。",
+"- 规则：rules/rules.yaml 共 27 条（21 确定性 + 6 语义 R20–R25），顶部含 stance = 甲方（采购方），不得修改。",
+"- 硬校验：python eval/check_starter.py → 30 份合同、内容指纹以 7fd9a1f3 开头、规则 27 条含立场、单元 60、锚点 20。",
+"- 判定单元：truth/units_sample.jsonl 60 条（存在型 30 / 缺失型 20 / 语义 10），一行 = 合同 × 规则。"
+].join("\n");
+
+const INIT_PROMPT = [
+"先只做环境准备，不要写业务代码。",
+"",
+"1. 建独立虚拟环境 .venv 并激活；按 requirements.txt 安装依赖（版本已锁，不要升级）。",
+"2. 把 .env.example 复制成 .env，按下表写入配置（键名保持原样）：",
+"   SILICONFLOW_BASE=https://api.siliconflow.cn/v1",
+"   SILICONFLOW_KEY=<我稍后填，先留占位>",
+"   MODEL_MAIN=deepseek-ai/DeepSeek-V3",
+"   MODEL_JUDGE=Qwen/Qwen2.5-72B-Instruct",
+"   CONTRACTS_DIR=materials/contracts",
+"   RULES_PATH=rules/rules.yaml",
+"   SEMANTIC_MAX_CHARS=6000",
+"   SEMANTIC_RULES=R20,R21,R22,R23,R24,R25",
+"   PORT=4182",
+"3. 跑 python eval/check_starter.py，把完整输出贴给我。",
+"4. 等我填好 SILICONFLOW_KEY 后，做一次生成模型连通自检（发一条最短请求），报告是否返回非空内容。",
+"5. 每一步结束停下汇报。不要改 materials/、rules/、truth/ 下的任何文件。"
+].join("\n");
+
+const ENV_BLOCK = [
+"【环境】",
+"- Python 3.12.x；建独立 venv；依赖见素材包 requirements.txt（已锁版本）。",
+"- 解析：python-docx 逐段读取；规则：PyYAML 读取 YAML。",
+"- 分片上限：单次语义调用不超过 SEMANTIC_MAX_CHARS=6000，整份合同不得一次塞入。",
+"- 配置项全在 .env：SILICONFLOW_BASE / SILICONFLOW_KEY / MODEL_MAIN / MODEL_JUDGE / CONTRACTS_DIR / RULES_PATH / SEMANTIC_MAX_CHARS / SEMANTIC_RULES / PORT。"
+].join("\n");
+
+const RED_BLOCK = [
+"【红线】",
+"- 不得编造规则、不得自创规则号：语义层只能对白名单内的规则号作答。",
+"- 不得修改 materials/、rules/、truth/ 下的任何文件。",
+"- 「未检出」不得写成「合规」：关闭语义层时，6 条语义规则必须显式出现在 not_detected。",
+"- 每条结论必须带原文证据与定位（段 idx + 段内偏移）；证据须属该规则主题。"
+].join("\n");
+
+const FLOW_BLOCK = [
+"【流程纪律】",
+"1. 依次走完八环节：office-hours → spec → autoplan → build → review → qa → ship → retro，顺序不可跳过、不可打乱。",
+"2. 禁止全自动：每完成一个环节，必须停下汇报该环节产出，得到我的明确许可后才能进入下一环。",
+"3. 四个拍板点必须列出选项与利弊，等我选择后再继续：规则清单来源 / 立场声明 / 证据粒度 / 语义层开关。",
+"4. 每环节产出文件落到当前目录；未达标项写进 known issues，不得写成\"基本达标\"。"
+].join("\n");
+
+/* ===================== 七步定义 ===================== */
+const STEPS = [
+  {
+    key:"bg", type:"textarea", rows:4,
+    q:"第 1 步 · 背景与角色：你是谁，在给谁做？",
+    help:"让智能体知道上下文：<b>我是谁</b>、<b>给谁审</b>、<b>谁看结论</b>。合同审查尤其要写清「结论是给人复核的」，不是给人朗读的。",
+    ph:"例：我是 FDE 施工工程师（Delta），为某省级通信服务企业的法务与采购部门做合同审查。",
+    ref:"我是 FDE 团队的施工工程师（Delta 角色），为某省级通信服务企业的法务与采购部门施工场景三（合同合规审查）。上一轮已完成需求澄清与技术选型，本轮从零施工。使用者是法务与采购经办人——他们要的是能复核的结论，不是一段读后感。"
+  },
+  {
+    key:"goal", type:"text",
+    q:"第 2 步 · 要做什么：一句话说清",
+    help:"别写「做一个合同审查系统」。要具体到<b>按什么清单、出什么结论、站在谁的立场、什么不做</b>。",
+    ph:"一句话：按什么清单、出什么结论、代表哪一方、边界在哪。",
+    ref:"做一个合同审查引擎：读取 docx 合同，按规则清单识别风险与缺失项，输出分级报告，每条结论带原文证据与定位。审查代表甲方（采购方）立场。扫描件（PDF 影像）不在范围内。"
+  },
+  {
+    key:"io", type:"textarea", rows:5,
+    q:"第 3 步 · 输入输出：收到什么，吐出什么？",
+    help:"输出不只是结论列表。要包含<b>分级计数、逐条证据与定位、覆盖率三态</b>——否则报告无法复核。",
+    ph:"输入：contract_id 或 docx；输出：summary / findings[]（rule_id、level、evidence、locator）/ coverage（checked、not_detected、needs_human）/ review_id。",
+    ref:"输入：contract_id（CT001–CT030）或上传的 docx。\n输出：summary（高/中/低/必查缺失）、findings[]（rule_id、level、title、evidence、locator{para_idx, offset}、remediation）、coverage（rules_checked、not_detected、needs_human）、review_id。"
+  },
+  {
+    key:"tech", type:"textarea", rows:6,
+    q:"第 4 步 · 技术栈与关键参数：双引擎怎么分工、参数怎么定？",
+    help:"案例已定「要做审查」，要定的是：<b>哪些规则交代码、哪些交模型</b>、立场写在哪、语义层怎么分片与约束、实现怎么分工。",
+    ph:"框架 …；解析 …；规则 …（21 确定性 + 6 语义）；立场 …；分片 …；输出格式 …；五块分工 …",
+    ref:"技术栈：Python 3.12 + FastAPI + python-docx + PyYAML；一家供应商提供生成模型。\n规则：rules.yaml 27 条（21 条确定性 + 6 条语义 R20–R25），立场 = 甲方（采购方），不得修改规则文件。\n双引擎：确定性规则全部交代码；只有 6 条语义规则交模型，且必须给原文证据、证据须属该规则主题。\n语义层：按条款分片送入（单次不超过 SEMANTIC_MAX_CHARS=6000）；强制 JSON；规则号白名单；输出上限给够，空返回判失败。\n分工：解析 / 规则引擎 / 语义层 / 合并分级 / 服务，文件名自定；先建空壳再逐块填。"
+  },
+  {
+    key:"data", type:"textarea", rows:4,
+    q:"第 5 步 · 数据现状：素材什么情况？",
+    help:"交代<b>多少份合同、规则多少条、判定单元多少、锚点多少</b>，以及规则文件不能改。漏了这条，它可能改规则去迁就实现。",
+    ph:"合同 … 份（位置 …）；规则 … 条（含立场）；判定单元 …；锚点 …",
+    ref:"30 份合成合同（CT001–CT030.docx），内容指纹以 7fd9a1f3 开头；规则 27 条含立场；判定单元样本 60 条（存在型 30 / 缺失型 20 / 语义 10）；人工锚点 20 条。合同结构为「章 / 第 X 条 / 段」，解析要按条切并保留段偏移。"
+  },
+  {
+    key:"accept", type:"textarea", rows:6,
+    q:"第 6 步 · 验收口径：怎么算召回、怎么算定位？",
+    help:"训练你把验收说死。三个要点：<b>判定单元是规则×合同</b>、<b>召回必须与精确率成对</b>、<b>定位要拆两个分母</b>。",
+    ph:"判定单元 …；存在型 P/R/F1 …；缺失型 Recall …；语义 R/P 成对 …；定位两分母 …；三态 …",
+    ref:"判定单元 = 规则 × 合同，不按合同计。\n存在型（R01–R08）报 P/R/F1；缺失型（R09–R13）报 Recall；语义型（R20–R25）Recall 与 Precision 必须成对报；等级一致率单独算。\n定位拆两个分母：定位准确率（可定位项）、缺失项位置覆盖率（推断，需标注）。\n三态覆盖：checked / not_detected / needs_human；关闭语义层时 6 条语义规则必须显式出现在 not_detected。"
+  },
+  {
+    key:"bound", type:"textarea", rows:5,
+    q:"第 7 步 · 红线与停止条件：什么不许做、什么时候必须停？",
+    help:"红线决定它不能犯什么；停止条件决定你还有没有把关机会。本场景最贵的一条是<b>立场先定、未检出≠合规</b>。",
+    ph:"不许 …；不许 …；每完成一环必须停下等我确认；拍板点列选项等我选。",
+    ref:"停止条件：每完成一个环节停下汇报，得到我的许可再进下一环；规则清单来源、立场声明、证据粒度、语义层开关四点必须先列选项等我拍板，不许自行决定。\n另：不得编造规则或自创规则号；不得改 materials/、rules/、truth/；「未检出」不得写成「合规」；每条结论必须带原文证据与定位；整份合同不得一次塞入模型。"
+  }
+];
+
+/* ===================== 红线体检 ===================== */
+const CHECKS = [
+  { id:"stance", label:"立场：写清了代表哪一方",
+    test:v => /(立场|stance|甲方|乙方|采购方)/.test(v.all),
+    sugg:"审查代表甲方（采购方）立场：对甲方有利的约定不构成风险，对甲方不利的才构成风险；立场要进提示词，报告首页要写。", target:3 },
+  { id:"dual", label:"双引擎：21 条交代码、只有 6 条交模型",
+    test:v => { const t=v.all; return /(确定性|规则引擎)/.test(t) && /(语义)/.test(t) && /(6 条|R20|白名单)/.test(t); },
+    sugg:"确定性规则（存在/缺失/数值/结构）全部交代码；只有 6 条语义规则 R20–R25 交模型，且规则号白名单、不得新增。", target:3 },
+  { id:"evidence", label:"证据三要素：片段 + 定位 + 主题归属",
+    test:v => { const t=v.all; return /(证据|evidence)/.test(t) && /(定位|offset|para)/.test(t) && /(主题|属该规则)/.test(t); },
+    sugg:"每条结论必须带原文片段、定位（段 idx + 段内偏移）、且证据须属该规则主题（主题守卫）。", target:5 },
+  { id:"tri", label:"三态：未检出 ≠ 合规",
+    test:v => /(未检出|not_detected|三态|needs_human)/.test(v.all),
+    sugg:"覆盖三态：checked / not_detected / needs_human；关闭语义层时 6 条语义规则必须显式出现在 not_detected。", target:5 },
+  { id:"metrics", label:"指标：分类型、召回与精确率成对",
+    test:v => { const t=v.all; return /(P\/R|精确率|Precision)/.test(t) && /(召回|Recall)/.test(t); },
+    sugg:"存在型报 P/R/F1；缺失型报 Recall；语义型 Recall 与 Precision 必须成对报；等级一致率单独算。", target:5 },
+  { id:"units", label:"判定单元 = 规则 × 合同；定位拆两个分母",
+    test:v => { const t=v.all; return /(规则.{0,3}合同|判定单元)/.test(t) && /(分母)/.test(t); },
+    sugg:"判定单元 = 规则 × 合同（不按合同计）；定位拆两个分母：定位准确率（可定位项）、缺失项位置覆盖率（推断）。", target:5 },
+  { id:"stop", label:"停止条件：一环一停、拍板点等我选",
+    test:v => /(停下|等我|拍板|许可)/.test(v.all),
+    sugg:"每完成一个环节停下汇报，得到许可再进下一环；规则清单来源、立场、证据粒度、语义开关必须列选项等我拍板。", target:6 },
+  { id:"ban", label:"禁止项：不改素材、不自创规则、不整份塞模型",
+    test:v => /(禁止|不得|不许)/.test(v.all),
+    sugg:"不得编造规则或自创规则号；不得改 materials/、rules/、truth/；整份合同不得一次塞入模型（按条款分片）。", target:6 }
+];
+
+/* ===================== 状态与渲染 ===================== */
+const state = { i:0, values: STEPS.map(()=> ""), view:"intro" };
+const $ = s => document.querySelector(s);
+
+function show(view){
+  state.view = view;
+  $("#intro").classList.toggle("hidden", view!=="intro");
+  $("#formView").classList.toggle("hidden", view!=="form");
+  $("#resultView").classList.toggle("hidden", view!=="result");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function renderStep(){
+  const st = STEPS[state.i];
+  $("#stepLabel").textContent = `第 ${state.i+1} / ${STEPS.length} 步`;
+  $("#bar").style.width = ((state.i)/STEPS.length*100) + "%";
+  $("#qTitle").textContent = st.q;
+  $("#qHelp").innerHTML = st.help;
+  $("#refBox").style.display = "none";
+  $("#refBox").textContent = "参考答案：\n" + st.ref;
+  const v = state.values[state.i];
+  if (st.type === "text"){
+    $("#inputArea").innerHTML = `<input type="text" id="field" placeholder="${st.ph}">`;
+  } else {
+    $("#inputArea").innerHTML = `<textarea id="field" rows="${st.rows}" placeholder="${st.ph}"></textarea>`;
+  }
+  $("#field").value = v;
+  $("#field").addEventListener("input", e => { state.values[state.i] = e.target.value; });
+  $("#prevBtn").disabled = state.i === 0;
+  $("#nextBtn").textContent = (state.i === STEPS.length-1) ? "生成提示词 →" : "下一步 →";
+  $("#refBtn").textContent = "看看这一步的参考答案";
+  $("#field").focus();
+}
+
+function assemble(values){
+  const v = values;
+  return [
+"请以本项目的施工工程师（Delta 角色）身份，执行本次开发，按下面的背景与约束推进。",
+"",
+"【背景】" + (v[0] || "（未填）"),
+"",
+"【要做什么】" + (v[1] || "（未填）"),
+"",
+"【输入输出】" + (v[2] || "（未填）"),
+"",
+"【技术栈与关键参数】" + (v[3] || "（未填）"),
+
+"",
+"【数据现状】" + (v[4] || "（未填）"),
+"",
+DATA_BLOCK,
+"",
+"【验收口径】" + (v[5] || "（未填）"),
+"",
+"【红线与停止条件】" + (v[6] || "（未填）"),
+"",
+RED_BLOCK,
+"",
+FLOW_BLOCK,
+"",
+ENV_BLOCK,
+"",
+"现在从 office-hours 开始。"
+  ].join("\n");
+}
+
+function refAssemble(){
+  return assemble(STEPS.map(s=>s.ref));
+}
+
+function runChecks(values){
+  const v = { all: values.join("\n"), byStep: values };
+  return CHECKS.map(c => ({ ...c, pass: !!c.test(v) }));
+}
+
+function renderResult(){
+  const mine = assemble(state.values);
+  $("#mineOut").textContent = mine;
+  $("#refOut").textContent = refAssemble();
+
+  // 体检
+  const res = runChecks(state.values);
+  const okCount = res.filter(r=>r.pass).length;
+  const list = $("#checkList");
+  list.innerHTML = "";
+  res.forEach((r, idx) => {
+    const div = document.createElement("div");
+    div.className = "check";
+    div.innerHTML = `
+      <div class="dot ${r.pass?'ok':'bad'}">${r.pass?'✓':'!'}</div>
+      <div class="body">
+        <div class="t">${r.label} <span class="pill ${r.pass?'':'warn'}">${r.pass?'通过':'未通过'}</span></div>
+        ${r.pass ? "" : `
+          <div class="sugg">建议补入：${r.sugg}
+            <div class="row" style="margin-top:8px">
+              <button class="btn small" data-fix="${idx}">补入第 ${r.target+1} 步</button>
+            </div>
+          </div>`}
+      </div>`;
+    list.appendChild(div);
+  });
+  const head = document.createElement("div");
+  head.className = "muted";
+  head.style.marginBottom = "8px";
+  head.textContent = `体检结果：${okCount} / ${res.length} 项通过` + (okCount===res.length ? "（可以发出去）" : "（先补红项再发）");
+  list.prepend(head);
+  list.querySelectorAll("[data-fix]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const c = res[Number(btn.dataset.fix)];
+      const i = c.target;
+      const cur = state.values[i].trim();
+      state.values[i] = cur ? (cur.replace(/[。；;]$/,"") + "；" + c.sugg) : c.sugg;
+      renderResult();
+    });
+  });
+
+  // 差异
+  const diffs = [];
+  STEPS.forEach((s,i)=>{
+    const mineLen = (state.values[i]||"").trim().length;
+    const refLen = s.ref.length;
+    if (mineLen === 0) diffs.push(`<b>${s.q.split("·")[1]}</b>：未填。参考答案 ${refLen} 字。`);
+    else if (mineLen < refLen * 0.55) diffs.push(`<b>${s.q.split("·")[1]}</b>：${mineLen} 字，参考答案 ${refLen} 字 —— 可能漏了关键判断，建议对照。`);
+  });
+  CHECKS.filter(c=>!c.test({all:state.values.join("\n")})).forEach(c=>{
+    diffs.push(`红线未过：<b>${c.label}</b>`);
+  });
+  $("#diffList").innerHTML = diffs.length ? diffs.map(d=>`<li>${d}</li>`).join("") : "<li>各步长度与红线检查均正常。</li>";
+
+  show("result");
+}
+
+/* ===================== 事件 ===================== */
+$("#startBtn").addEventListener("click", ()=>{ show("form"); renderStep(); });
+$("#initBtn").addEventListener("click", async ()=>{
+  const text = INIT_PROMPT;
+  try { await navigator.clipboard.writeText(text); $("#initBtn").textContent = "已复制环境初始化提示词 ✓"; }
+  catch(e){ const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); $("#initBtn").textContent="已复制 ✓";}catch(err){$("#initBtn").textContent="请手动复制";} document.body.removeChild(ta); }
+  setTimeout(()=>{ $("#initBtn").textContent = "📋 复制环境初始化提示词（开工前先贴这段）"; }, 2200);
+});
+$("#nextBtn").addEventListener("click", ()=>{
+  if (state.i < STEPS.length-1){ state.i++; renderStep(); }
+  else { renderResult(); }
+});
+$("#prevBtn").addEventListener("click", ()=>{ if (state.i>0){ state.i--; renderStep(); } });
+$("#refBtn").addEventListener("click", ()=>{
+  const box = $("#refBox");
+  const open = box.style.display === "block";
+  box.style.display = open ? "none" : "block";
+  $("#refBtn").textContent = open ? "看看这一步的参考答案" : "收起参考答案";
+});
+$("#backBtn").addEventListener("click", ()=>{ state.i = 0; show("form"); renderStep(); });
+$("#resetBtn").addEventListener("click", ()=>{
+  state.values = STEPS.map(()=> "");
+  state.i = 0; show("intro");
+});
+document.querySelectorAll(".tab").forEach(t=>{
+  t.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on", x===t));
+    ["mine","ref","diff"].forEach(k=>{
+      document.getElementById("tab"+k[0].toUpperCase()+k.slice(1)).classList.toggle("hidden", k!==t.dataset.tab);
+    });
+  });
+});
+$("#copyBtn").addEventListener("click", async ()=>{
+  const text = $("#mineOut").textContent;
+  try { await navigator.clipboard.writeText(text); $("#copyBtn").textContent = "已复制 ✓"; }
+  catch(e){
+    const ta = document.createElement("textarea");
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); $("#copyBtn").textContent = "已复制 ✓"; }
+    catch(err){ $("#copyBtn").textContent = "请手动全选复制"; }
+    document.body.removeChild(ta);
+  }
+  setTimeout(()=>{ $("#copyBtn").textContent = "复制提示词"; }, 1800);
+});
+$("#dlBtn").addEventListener("click", ()=>{
+  const blob = new Blob([$("#mineOut").textContent], {type:"text/markdown;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "启动提示词-政企制度问答.md";
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1500);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+---
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+const src = BASE + '/wizards/rag.html';
+const title = '政企知识问答提示词向导';
+---
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>政企知识问答提示词向导 · 明州 AI Coding 手册</title>
+  <style is:global>@import "/src/styles/global.css";</style>
+  <style>
+    html,body{height:100%;margin:0}
+    .wrap{display:flex;flex-direction:column;height:100vh}
+    .bar{display:flex;gap:12px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line);font-size:14px}
+    iframe{flex:1;width:100%;border:0}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="bar">
+      <a href="${BASE}/">← 返回手册</a>
+      <strong>政企知识问答提示词向导</strong>
+      <a style="margin-left:auto" href="/wizards/rag.html" target="_blank" rel="noopener">新窗口打开 ↗</a>
+    </div>
+    <iframe src="/wizards/rag.html" title="政企知识问答提示词向导"></iframe>
+  </div>
+</body>
+</html>
