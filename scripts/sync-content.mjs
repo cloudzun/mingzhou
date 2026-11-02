@@ -9,7 +9,7 @@ const MANUAL = path.resolve(SITE, "..");
 const OUT = path.join(SITE, "content");
 
 const SRC = [
-  { file: "01-第0章-前置.md", slug: "00", title: "第 0 章 · 前置", desc: "gstack、纪律与自检" },
+  { file: "01-第0章-前置.md", slug: "00", title: "第 0 章 · 环境准备", desc: "装 gstack、验通路、守纪律" },
   { file: "02-第一篇.md", slug: "01", title: "第一篇 · 走一遍八环", desc: "A 观察 / B 复现 / C 白手起家" },
   { file: "03-第二篇.md", slug: "02", title: "第二篇 · 做一个 AI 应用", desc: "判型 → 卡一实操 → 卡二卡三 → 诚实清单" },
   { file: "04-第三篇.md", slug: "03", title: "第三篇 · 搬回自己的课题", desc: "判型 / 瘦身 / 造数 / 红线 / Day-2 / 交卷" }
