@@ -3,7 +3,7 @@ import MingShell from "../layouts/MingShell.astro";
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const parts = [
-  { k: "FOUNDATION", t: "第 0 章 · 前置", c: "var(--c0)", h: BASE + "/handbook/00/",
+  { k: "FOUNDATION", t: "第 0 章 · 环境准备", c: "var(--c0)", h: BASE + "/handbook/00/",
     d: "gstack 是什么、怎么装到你的宿主、五条纪律与两条硬红线。" },
   { k: "PART ONE", t: "第一篇 · 走一遍八环", c: "var(--c1)", h: BASE + "/handbook/01/",
     d: "A 观察四幕演示 · B 复现公开镜像 · C 白手起家做水果店。" },
@@ -36,7 +36,7 @@ const kits = [
   </section>
 
   <p class="section-cap">手册正文 · 按顺序读，或直接跳到所在阶段</p>
-  <section class="cards">
+  <section class="cards cards-2">
     {parts.map((p) => (
       <a class="card" href={p.h} style={"--accent:" + p.c}>
         <span class="k">{p.k}</span>
