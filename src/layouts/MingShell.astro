@@ -9,12 +9,12 @@ const current = Astro.props.current || "";
 const tints = ["c0", "c1", "c2", "c3"];
 
 const tools = [
+  { key: "demo", label: "四幕演示 · 水果店", href: BASE + "/demo/fruitlab/" },
   { key: "fruitlab", label: "起手引导 · 水果店", href: BASE + "/wizard/fruitlab/" },
-  { key: "project", label: "课题开工向导", href: BASE + "/wizard/project/" },
-  { key: "triage", label: "判型工具", href: BASE + "/wizard/triage/" },
-  { key: "rag", label: "向导 · 知识问答", href: BASE + "/wizard/rag/" },
-  { key: "sql", label: "向导 · 数据问数", href: BASE + "/wizard/sql/" },
-  { key: "contract", label: "向导 · 合同审查", href: BASE + "/wizard/contract/" }
+  { key: "rag", label: "向导 · 知识问答（卡一）", href: BASE + "/wizard/rag/" },
+  { key: "sql", label: "向导 · 数据问数（卡二）", href: BASE + "/wizard/sql/" },
+  { key: "contract", label: "向导 · 合同审查（卡三）", href: BASE + "/wizard/contract/" },
+  { key: "project", label: "课题开工向导（第三篇）", href: BASE + "/wizard/project/" }
 ];
 ---
 
@@ -38,7 +38,7 @@ const tools = [
     <nav class="top-links">
       <a href={BASE + "/handbook/00/"}>正文</a>
       <a href={BASE + "/demo/fruitlab/"}>演示</a>
-      <a href={BASE + "/wizard/triage/"}>向导</a>
+      <a href={BASE + "/wizard/fruitlab/"}>向导</a>
       <a href={BASE + "/kit/"}>素材</a>
       <a class="pill" href={BASE + "/search/"}>检索</a>
     </nav>
