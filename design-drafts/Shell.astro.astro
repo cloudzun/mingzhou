@@ -1,0 +1,84 @@
+---
+import { loadDocs } from "../lib/docs.js";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, ");
+const docs = loadDocs();
+const current = Astro.props.current || ";
+const partTint = ["c0", "c1", "c2", "c3"];
+
+const tools = [
+  { key: "demo", label: "四幕演示", href: `${BASE}/demo/fruitlab/` },
+  { key: "wizard", label: "起手引导 · 水果店", href: `${BASE}/wizard/fruitlab/` },
+  { key: "triage", label: "判型工具", href: `${BASE}/wizard/triage/` },
+  { key: "rag", label: "向导 · 知识问答", href: `${BASE}/wizard/rag/` },
+  { key: "sql", label: "向导 · 数据问数", href: `${BASE}/wizard/sql/` },
+  { key: "contract", label: "向导 · 合同审查", href: `${BASE}/wizard/contract/` },
+  { key: "kit", label: "素材与指纹", href: `${BASE}/kit/` },
+  { key: "search", label: "全文检索", href: `${BASE}/search/` },
+  { key: "print", label: "打印视图", href: `${BASE}/print/` }
+];
+
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{Astro.props.title || '明州 · AI Coding 实验手册'}</title>
+  <style is:global>
+    @import "/src/styles/global.css";
+    @import "/src/styles/theme.css";
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href={`${BASE}/`}>
+    <span class="brand-mark">明</span>
+    <span class="brand-text">
+      <strong>明州 · AI Coding 实验手册</strong>
+      <em>GStack 八环 · 三篇实操 · 五套向导</em>
+    </span>
+  </a>
+  <nav class="top-links">
+    <a href={`${BASE}/handbook/00/`}>正文</a>
+    <a href={`${BASE}/demo/fruitlab/`}>演示</a>
+    <a href={`${BASE}/wizard/triage/`}>向导</a>
+    <a href={`${BASE}/kit/`}>素材</a>
+    <a class="pill" href={`${BASE}/search/`}>检索</a>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="sidenav">
+    <p class="nav-cap">手册正文</p>
+    <ul class="nav-list">
+      {docs.map((d, i) => (
+        <li class={`nav-item ${partTint[i] || "c1"} ${current === d.slug ? "active" : ""}`}>
+          <a href={`${BASE}/handbook/${d.slug}/`}>
+            <span class="dot" />
+            <span>{d.title}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <p class="nav-cap">实操与工具</p>
+    <ul class="nav-list compact">
+      {tools.map((t) => (
+        <li class={`nav-item ${current === t.key ? "active" : "}`}>
+          <a href={t.href}><span class="dot" /><span>{t.label}</span></a>
+        </li>
+      ))}
+    </ul>
+
+    <div class="nav-foot">
+      <span class="badge">v1.0</span>
+      <a href={`${BASE}/v1.0/`}>版本说明</a>
+    </div>
+  </aside>
+
+  <main class="content">
+    <slot />
+  </main>
+</div>
+
+</body>
+</html>
