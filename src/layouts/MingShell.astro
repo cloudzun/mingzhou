@@ -9,15 +9,11 @@ const current = Astro.props.current || "";
 const tints = ["c0", "c1", "c2", "c3"];
 
 const tools = [
-  { key: "demo", label: "四幕演示", href: BASE + "/demo/fruitlab/" },
   { key: "fruitlab", label: "起手引导 · 水果店", href: BASE + "/wizard/fruitlab/" },
   { key: "triage", label: "判型工具", href: BASE + "/wizard/triage/" },
   { key: "rag", label: "向导 · 知识问答", href: BASE + "/wizard/rag/" },
   { key: "sql", label: "向导 · 数据问数", href: BASE + "/wizard/sql/" },
-  { key: "contract", label: "向导 · 合同审查", href: BASE + "/wizard/contract/" },
-  { key: "kit", label: "素材与指纹", href: BASE + "/kit/" },
-  { key: "search", label: "全文检索", href: BASE + "/search/" },
-  { key: "print", label: "打印视图", href: BASE + "/print/" }
+  { key: "contract", label: "向导 · 合同审查", href: BASE + "/wizard/contract/" }
 ];
 ---
 
@@ -61,7 +57,7 @@ const tools = [
         ))}
       </ul>
 
-      <p class="nav-cap">实操与工具</p>
+      <p class="nav-cap">实验向导</p>
       <ul class="nav-list compact">
         {tools.map((t) => (
           <li class={"nav-item" + (current === t.key ? " active" : "")}>
@@ -80,5 +76,35 @@ const tools = [
       <slot />
     </main>
   </div>
+
+  <script is:inline>
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll(".prose pre").forEach(function (pre) {
+        if (pre.parentElement.classList.contains("code-wrap")) return;
+        var wrap = document.createElement("div");
+        wrap.className = "code-wrap";
+        pre.parentNode.insertBefore(wrap, pre);
+        wrap.appendChild(pre);
+        var btn = document.createElement("button");
+        btn.className = "copy-btn";
+        btn.type = "button";
+        btn.textContent = "复制";
+        btn.addEventListener("click", function () {
+          var code = pre.querySelector("code");
+          var text = (code || pre).innerText;
+          var done = function () { btn.textContent = "已复制"; setTimeout(function () { btn.textContent = "复制"; }, 1600); };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done).catch(function () { btn.textContent = "复制失败"; });
+          } else {
+            var ta = document.createElement("textarea");
+            ta.value = text; document.body.appendChild(ta); ta.select();
+            try { document.execCommand("copy"); done(); } catch (e) { btn.textContent = "复制失败"; }
+            document.body.removeChild(ta);
+          }
+        });
+        wrap.appendChild(btn);
+      });
+    });
+  </script>
 </body>
 </html>
