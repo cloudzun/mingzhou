@@ -1,22 +1,16 @@
 ---
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+import MingShell from "../layouts/MingShell.astro";
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
-<!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>全文检索 · 明州 AI Coding 手册</title>
-<style is:global>@import "/src/styles/global.css";</style>
-</head><body>
-<header class="top"><a class="brand" href="${BASE}/">明州 · AI Coding 实验手册</a></header>
-<main class="main" style="max-width:900px;margin:0 auto;padding:28px 20px 80px">
-<h1>全文检索</h1>
-<p class="lede">静态索引（Pagefind），构建期生成，无服务端。</p>
-<link href="../pagefind/pagefind-ui.css" rel="stylesheet" />
-<div id="search"></div>
-<script src="../pagefind/pagefind-ui.js" is:inline></script>
-<script is:inline>
-  window.addEventListener('DOMContentLoaded', function () {
-    new PagefindUI({ element: '#search', baseUrl: '../pagefind/', showSubResults: true });
-  });
-</script>
-</main>
-</body></html>
+<MingShell current="search" title="全文检索">
+  <h1>全文检索</h1>
+  <p class="lede">静态索引（Pagefind），构建期生成，无服务端。</p>
+  <link href={BASE + "/pagefind/pagefind-ui.css"} rel="stylesheet" />
+  <div id="search"></div>
+  <script src={BASE + "/pagefind/pagefind-ui.js"} is:inline></script>
+  <script is:inline define:vars={{ base: BASE }}>
+    window.addEventListener("DOMContentLoaded", function () {
+      new PagefindUI({ element: "#search", baseUrl: base + "/pagefind/", showSubResults: true });
+    });
+  </script>
+</MingShell>

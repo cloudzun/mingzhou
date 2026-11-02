@@ -75,3 +75,18 @@ body{background:var(--bg);color:var(--fg);font-family:"Microsoft YaHei","PingFan
   .sidenav{position:static;max-height:none;border-bottom:1px solid var(--line);padding-bottom:12px}
   .hero{padding:32px 24px}.hero h1{font-size:24px}
 }
+
+/* 内嵌页与工具页 */
+.frame-wrap{display:flex;flex-direction:column;height:calc(100vh - 150px);min-height:520px}
+.frame-bar{display:flex;gap:12px;align-items:center;padding:8px 12px;border:1px solid var(--line);border-radius:10px 10px 0 0;background:var(--bg-elev);font-size:13.5px}
+.frame-bar .open{margin-left:auto}
+.frame-wrap iframe{flex:1;width:100%;border:1px solid var(--line);border-top:0;border-radius:0 0 10px 10px;background:#fff}
+.triage-q{margin:14px 0}.triage-q p{margin:0 0 8px}
+button.opt,button#gen,button#copy{padding:6px 14px;margin-right:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg-elev);cursor:pointer;font:inherit;color:var(--fg)}
+button.opt:hover,button#gen:hover,button#copy:hover{border-color:var(--brand);color:var(--brand)}
+button.opt.sel{background:color-mix(in srgb,var(--brand) 14%,transparent);border-color:var(--brand);color:var(--brand)}
+.triage-out{display:none;margin-top:18px;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--bg-elev)}
+.triage-out.on{display:block}
+.triage-out pre{white-space:pre-wrap;margin:8px 0 12px}
+textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg-elev);color:var(--fg);font:inherit}
+.hint{color:var(--muted);font-size:13px}

@@ -1,34 +1,31 @@
 ---
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+import MingShell from "../../layouts/MingShell.astro";
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
-<!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>水果店起手引导 · 明州 AI Coding 手册</title>
-<style is:global>@import "/src/styles/global.css";</style>
-
-</head><body>
-<header class="top"><a class="brand" href="${BASE}/">明州 · AI Coding 实验手册</a>
-<nav class="topnav"><a href="${BASE}/handbook/00/">正文</a><a href="${BASE}/demo/fruitlab">演示</a>
-<a href="${BASE}/wizard/fruitlab">向导</a><a href="${BASE}/kit">素材</a><a href="${BASE}/search">搜索</a></nav></header>
-<main class="main" style="max-width:820px;margin:0 auto;padding:28px 20px 80px">
-<h1>水果店起手引导（第一篇 C 部分）</h1>
-<p class="lede">填完得到两段可粘贴文本：启动提示词 + 驱动指令，与手册 1-C2 的真实起手方式一致。</p>
-<h2>1 一句话需求</h2>
-<textarea id="need" rows="3" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)">用 GStack 八环做一个卖水果的电商网站原型，10 种水果能浏览、能下单、订单能查到，不用数据库，做一个简单的 demo 用例。</textarea>
-<h2>2 四条执行约束（缺一不可）</h2>
-<ul style="line-height:2">
-<li>八环依次走完，顺序不可跳过、不可打乱</li>
-<li>每环产出对应文件并落盘</li>
-<li><strong>禁止全自动执行</strong>：每环之间停下汇报，得到许可才流转</li>
-<li>需要拍板的决策点必须列出选项与利弊，等人选择</li></ul>
-<p style="color:var(--muted);font-size:13px">第 3 条是地基：去掉它，智能体会一口气跑完八环，你拿到的是一堆没经过判断的产物。</p>
-<h2>3 生成</h2>
-<button id="gen" style="padding:8px 16px;border:1px solid var(--line);border-radius:6px;background:var(--soft);cursor:pointer">生成两段文本</button>
-<pre id="o1" style="white-space:pre-wrap"></pre><pre id="o2" style="white-space:pre-wrap"></pre>
-<script>
-document.getElementById('gen').addEventListener('click',function(){
-var need=document.getElementById('need').value.trim();
-document.getElementById('o1').textContent='【启动提示词】\n'+need+'\n\n（一句话需求要说清：数量、动作、明确不做什么、交付形态。少一样，第 1 环就开始猜。）';
-document.getElementById('o2').textContent='【驱动指令】\n按 gstack 八环依次推进，顺序不可跳过、不可打乱：\n第 1 环 /office-hours → 第 2 环 /spec → 第 3 环 /autoplan → 第 4 环 受控施工\n→ 第 5 环 /review → 第 6 环 /qa → 第 7 环 /ship → 第 8 环 /retro。\n\n每一环结束停下汇报：这一环做了什么、交了哪些文件、门禁结果是什么。\n需要我拍板的地方，列 2 到 3 个选项和各自代价，等我选。';
-});</script></main>
-</body></html>
+<MingShell current="fruitlab" title="水果店起手引导">
+  <h1>水果店起手引导</h1>
+  <p class="lede">填完得到两段可粘贴文本：启动提示词与驱动指令，对应手册 1-C2 的真实起手方式。</p>
+  <h2>1 一句话需求</h2>
+  <textarea id="need" rows="3">用 GStack 八环做一个卖水果的电商网站原型，10 种水果能浏览、能下单、订单能查到，不用数据库，做一个简单的 demo 用例。</textarea>
+  <h2>2 四条执行约束（缺一不可）</h2>
+  <ul>
+    <li>八环依次走完，顺序不可跳过、不可打乱</li>
+    <li>每环产出对应文件并落盘</li>
+    <li><strong>禁止全自动执行</strong>：每环之间停下汇报，得到许可才流转</li>
+    <li>需要拍板的决策点必须列出选项与利弊，等人选择</li>
+  </ul>
+  <p class="hint">第 3 条是地基：去掉它，智能体会一口气跑完八环，你拿到的是一堆没经过判断的产物。</p>
+  <h2>3 生成</h2>
+  <button id="gen">生成两段文本</button>
+  <pre id="o1"></pre>
+  <pre id="o2"></pre>
+  <script is:inline>
+    document.getElementById("gen").addEventListener("click", function () {
+      const need = document.getElementById("need").value.trim();
+      document.getElementById("o1").textContent =
+        "【启动提示词】\n" + need + "\n\n（一句话需求要说清：数量、动作、明确不做什么、交付形态。少一样，第 1 环就开始猜。）";
+      document.getElementById("o2").textContent =
+        "【驱动指令】\n按 gstack 八环依次推进，顺序不可跳过、不可打乱：\n第 1 环 /office-hours → 第 2 环 /spec → 第 3 环 /autoplan → 第 4 环 受控施工\n→ 第 5 环 /review → 第 6 环 /qa → 第 7 环 /ship → 第 8 环 /retro。\n\n每一环结束停下汇报：这一环做了什么、交了哪些文件、门禁结果是什么。\n需要我拍板的地方，列 2 到 3 个选项和各自代价，等我选。";
+    });
+  </script>
+</MingShell>

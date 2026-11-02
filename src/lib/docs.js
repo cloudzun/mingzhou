@@ -41,9 +41,10 @@ export function inlineFig(id) {
 }
 
 
-const FIG_BLOCK = /``mermaid\n[\s\S]*?``\s*\n+(\*图 (\d-\d)[：:][^*]*\*)/g;
+const FIG_BLOCK = /```mermaid\n[\s\S]*?```\s*\n+(\*图 (\d-\d)[：:][^*]*\*)/g;
 
 export function render(md) {
+  md = md.replace(/\r\n/g, "\n");
   const figs = [];
   md = md.replace(FIG_BLOCK, (_m, cap, id) => {
     figs.push(id);
