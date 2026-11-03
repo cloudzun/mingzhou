@@ -28,7 +28,8 @@ for (const s of SRC) {
     console.warn("缺失内容源:", src);
     continue;
   }
-  let body = fs.readFileSync(src, "utf8").replace(/^\uFEFF/, ).replace(/\r\n/g, "\n");
+  // 注意：replace 的第二个参数不能留空——留空会写成字符串 "undefined" 贴在正文开头（曾因此漏出 H1）
+  let body = fs.readFileSync(src, "utf8").replace(/^\uFEFF/, "").replace(/\r\n/g, "\n");
   // 去掉原文件的一级标题与顶部元信息引用块，标题由页面布局提供
   body = body.replace(/^# .*\n/, "");
   body = body.replace(/^(?:>.*\n)+\n?/m, "");

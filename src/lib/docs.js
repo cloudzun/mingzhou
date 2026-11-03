@@ -6,6 +6,9 @@ import path from "node:path";
 
 const SITE = path.resolve(process.cwd());
 const CONTENT = path.join(SITE, "content");
+// 正文里的站内链接一律写 @@BASE@@/xxx，构建期替换成站点 base（默认 /mingzhou）。
+// 纪律：md 里禁止写死 /mingzhou，否则换产物路径就全 404。
+const BASE = (import.meta.env.BASE_URL || "/mingzhou/").replace(/\/$/, "");
 
 function parseFront(raw) {
   const m = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
@@ -45,6 +48,7 @@ const FIG_BLOCK = /```mermaid\n[\s\S]*?```\s*\n+(\*图 (\d-\d)[：:][^*]*\*)/g;
 
 export function render(md) {
   md = md.replace(/\r\n/g, "\n");
+  md = md.replace(/@@BASE@@/g, BASE);
   const figs = [];
   md = md.replace(FIG_BLOCK, (_m, cap, id) => {
     figs.push(id);

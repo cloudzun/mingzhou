@@ -10,7 +10,7 @@ HOST = "https://www.cloudzun.com/mingzhou"
 routes = [
     "/", "/handbook/00/", "/handbook/01/", "/handbook/02/", "/handbook/03/",
     "/demo/fruitlab/", "/wizard/rag/", "/wizard/sql/", "/wizard/contract/",
-    "/wizard/fruitlab/", "/kit/", "/search/", "/print/", "/v1.0/",
+    "/wizard/fruitlab/", "/wizard/project/", "/kit/", "/search/", "/print/", "/v1.0/",
 ]
 
 def fetch(route):
