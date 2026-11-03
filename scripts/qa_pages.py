@@ -147,9 +147,24 @@ def browser():
                 if box.count() == 0:
                     issues.append("找不到搜索框")
                 else:
-                    box.first.fill("判定单元")
-                    page.wait_for_timeout(1800)
+                    # Pagefind UI 是运行时初始化的：初始化可能把输入框节点换掉，
+                    # 太早 fill 会落空（本地快、线上慢，本地过线上挂过一次）。
+                    page.wait_for_timeout(900)
                     links = page.locator(".pagefind-ui__result-link")
+                    for attempt in range(2):
+                        box.first.fill("判定单元")
+                        try:
+                            page.wait_for_selector(".pagefind-ui__result", timeout=6000)
+                            break
+                        except Exception:
+                            page.evaluate(
+                                "() => { const i = document.querySelector('.pagefind-ui__search-input');"
+                                " if (i) { i.value = '判定单元'; i.dispatchEvent(new Event('input', { bubbles: true })); } }"
+                            )
+                            page.wait_for_timeout(2500)
+                    if links.count() == 0:
+                        # 线上索引是构建期产物 + 运行时 fetch，偶发慢一拍；再给一次机会，避免假红
+                        page.wait_for_timeout(3000)
                     if links.count() == 0:
                         issues.append("搜索结果为空")
                     else:
