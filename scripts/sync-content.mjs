@@ -12,7 +12,7 @@ const SRC = [
   { file: "01-第0章-前置.md", slug: "00", title: "0. 环境准备", desc: "装 gstack、验通路、守纪律" },
   { file: "02-第一篇.md", slug: "01", title: "1. gstack 流程初探", desc: "A 观察 / B 复现最终效果 / C 白手起家" },
   { file: "03-第二篇.md", slug: "02", title: "2. 实现 AI 应用", desc: "RAG 示范完整流程，另两个场景照同一流程实现" },
-  { file: "04-第三篇.md", slug: "03", title: "3. 搬回自己的课题", desc: "判型 / 瘦身 / 造数 / 红线 / Day-2 / 交卷" }
+  { file: "04-第三篇.md", slug: "03", title: "3. 适配自选案例", desc: "判型 → 瘦身 → 造数 → 红线与受控 → 上线后运行 → 汇报答辩" }
 ];
 
 fs.mkdirSync(OUT, { recursive: true });

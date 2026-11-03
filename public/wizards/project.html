@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>向导 · 自选课题启动提示词</title>
+<link rel="icon" href="data:,">
+<style>
+  :root{
+    --bg:#f7f6f3; --card:#fff; --ink:#1f2328; --muted:#5b6570;
+    --line:#e3e0d8; --accent:#1f6feb; --ok:#1a7f37; --bad:#c0392b; --warn:#9a6700;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.7 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif;}
+  header{background:#11161d;color:#fff;padding:18px 24px}
+  header h1{margin:0;font-size:19px;letter-spacing:.3px}
+  header p{margin:6px 0 0;color:#9aa7b4;font-size:13.5px}
+  main{max-width:860px;margin:0 auto;padding:24px 20px 80px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin-bottom:16px}
+  h2{margin:0 0 10px;font-size:16.5px}
+  .tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:#eef2f7;color:#41505f;margin-right:6px}
+  .muted{color:var(--muted);font-size:14px}
+  .btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:8px;
+       padding:9px 16px;font-size:14.5px;cursor:pointer}
+  .btn:hover{opacity:.88}
+  .btn.ghost{background:transparent;color:var(--ink)}
+  .btn.small{padding:5px 10px;font-size:13px;border-radius:6px}
+  .btn[disabled]{opacity:.45;cursor:not-allowed}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+  .progress{height:6px;background:#e8e5dd;border-radius:99px;overflow:hidden;margin:4px 0 16px}
+  .progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+  .q-title{font-size:17.5px;font-weight:600;margin:0 0 8px}
+  .help{background:#f4f7fb;border-left:3px solid var(--accent);padding:10px 14px;border-radius:0 8px 8px 0;
+        font-size:14.5px;color:#33414f;margin:0 0 14px}
+  .help b{color:#0f1b28}
+  .lab{display:block;font-size:13.5px;color:var(--muted);margin:12px 0 4px}
+  textarea,input[type=text]{width:100%;font:inherit;padding:10px 12px;border:1px solid #cfd6dd;
+        border-radius:8px;background:#fcfcfb;resize:vertical}
+  textarea:focus,input:focus{outline:2px solid #b9d1f7;border-color:var(--accent)}
+  select{width:100%;font:inherit;padding:9px 12px;border:1px solid #cfd6dd;border-radius:8px;background:#fcfcfb}
+  pre{background:#0f141a;color:#e6edf3;padding:14px 16px;border-radius:8px;overflow:auto;
+      font:13px/1.65 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-word}
+  .check{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed var(--line)}
+  .check:last-child{border-bottom:0}
+  .dot{flex:0 0 18px;height:18px;border-radius:50%;margin-top:4px;font-size:11px;color:#fff;
+       display:flex;align-items:center;justify-content:center}
+  .dot.ok{background:var(--ok)} .dot.bad{background:var(--bad)}
+  .check .body{flex:1;min-width:0}
+  .check .body .t{font-size:14.5px;font-weight:600}
+  .check .body .s{font-size:13.5px;color:var(--muted);margin-top:3px}
+  .chk{display:flex;gap:9px;align-items:flex-start;padding:7px 0;font-size:14.5px}
+  .chk input{margin-top:5px}
+  .hint{font-size:13px;color:var(--muted);margin-top:4px}
+  footer{max-width:860px;margin:0 auto;padding:0 20px 40px;color:var(--muted);font-size:13px}
+  .hidden{display:none}
+  @media (max-width:620px){ main{padding:16px 12px 60px} .card{padding:16px} }
+</style>
+</head>
+<body>
+<header>
+  <h1>自选课题 · 启动提示词</h1>
+  <p>你只交代五件事：做哪个课题、给谁用、手上有什么、第一版做到哪、红线是什么。然后生成一段启动提示词，交给 gstack 开八环。判型、瘦身、造数、尺子都由 gstack 按八环推进时完成，每环停下等你拍板——不是你在这里填。</p>
+</header>
+
+<main>
+  <section id="intro" class="card">
+    <div><span class="tag">这一页不让你先做判型，只让你把话说清楚</span></div>
+    <h2>填 5 步 → 生成一段可粘贴的启动提示词</h2>
+    <p class="muted">判型（象限 / 主尺子 / 主闸）、瘦身（主核与不做清单）、造数（schema、预埋异常、四类指纹）、20 题尺子——<b>这些是 gstack 在八环里要干的活</b>，它会列选项等你拍板。你在这里只负责交代背景与边界，以及把红线说死。</p>
+    <ul class="muted">
+      <li><b>第 1 步 · 课题</b>：写下你要做的课题（自己写，不用选清单）</li>
+      <li><b>第 2 步 · 给谁用</b>：一句话目标、使用者、拿它定什么、错了的代价</li>
+      <li><b>第 3 步 · 手上有什么</b>：数据 / 文档、量级、能否给样例、跑在哪、碰不碰生产</li>
+      <li><b>第 4 步 · 第一版做到哪</b>：只做什么、不做什么、演示要看什么</li>
+      <li><b>第 5 步 · 红线</b>：PII / 生产 / 造假三条 + 数据出域限制</li>
+    </ul>
+    <div class="row">
+      <button class="btn" id="startBtn">开始 → 第 1 步</button>
+      <span class="muted">5–8 分钟｜最后输出一段启动提示词，可复制或下载 .md</span>
+    </div>
+  </section>
+
+  <section id="formView" class="hidden">
+    <div class="card">
+      <div class="progress"><i id="bar"></i></div>
+      <div class="muted" id="stepLabel"></div>
+      <h2 class="q-title" id="qTitle"></h2>
+      <div class="help" id="qHelp"></div>
+      <div id="inputArea"></div>
+      <div class="row">
+        <button class="btn ghost small" id="prevBtn">← 上一步</button>
+        <span style="flex:1"></span>
+        <button class="btn" id="nextBtn">下一步 →</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="resultView" class="hidden">
+    <div class="card">
+      <h2>自检：过了再贴给 gstack</h2>
+      <div id="checkList"></div>
+    </div>
+    <div class="card">
+      <h2>启动提示词</h2>
+      <p class="muted">贴进 gstack 会话即可。它会在第 1 环做判型与瘦身，并把选项列给你拍板。</p>
+      <pre id="outA"></pre>
+      <div class="row">
+        <button class="btn" id="copyBtn">复制提示词</button>
+        <button class="btn ghost" id="dlBtn">下载 .md</button>
+        <button class="btn ghost" id="backBtn">← 返回修改</button>
+        <button class="btn ghost" id="resetBtn">重新开始</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    用法：本页对应第三篇 3-1～3-7 的「启动」。判型与瘦身的判据在正文，执行交给 gstack；本页不替你判型，也不给任何参考提示词。
+  </footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var S = {
+    topic: "", dept: "", goal: "", user: "", decision: "", cost: "",
+    data: "", scale: "", sample: "", env: "", systems: "",
+    scope: "", notDo: "", demo: "",
+    red: {}, dataPolicy: ""
+  };
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function v(x) { return x && String(x).trim() ? String(x).trim() : "（待填）"; }
+  function lines(t) {
+    return String(t || "").split("\n").map(function (s) { return s.trim(); })
+      .filter(function (s) { return s.length > 0; });
+  }
+
+  var REDS = [
+    ["pii", "代码与仓库不含未脱敏的真实 PII / 管理 IP / 明文凭据"],
+    ["prod", "脚本不直连现网生产网元或生产计费库"],
+    ["fake", "不伪造评测数字；汇报的每个数字都能在仓库里实跑出来"]
+  ];
+
+  var STEPS = [
+    {
+      title: "第 1 步 · 你要做的课题",
+      help: "<b>就写课题名。</b>名字里带「平台 / 中心 / 全流程」也没关系——那是后面 gstack 第 1 环要帮你砍的事，现在不用管。",
+      render: function () {
+        return '<label class="lab">课题名（自己写，一句话能看懂）</label>' +
+          '<input type="text" id="topicInp" value="' + esc(S.topic) + '">' +
+          '<label class="lab">报送部门（可选）</label>' +
+          '<input type="text" id="deptInp" value="' + esc(S.dept) + '">';
+      },
+      after: function () {
+        var inp = $("topicInp"), dept = $("deptInp");
+        inp.addEventListener("input", function () { S.topic = inp.value; });
+        dept.addEventListener("input", function () { S.dept = dept.value; });
+      },
+      validate: function () {
+        if (!String(S.topic || "").trim()) { alert("先把课题名填上"); return false; }
+        return true;
+      }
+    },
+    {
+      title: "第 2 步 · 给谁用、用来定什么",
+      help: "<b>一句话说清三件事：</b>谁用、拿它决定什么、判断错了的代价是什么。写不出「使用者的岗位」或「具体决定」，说明课题还没找到真实落点——先别往下填，回去问业务方。<br><b>注意：</b>这里不写技术方案，只写业务。如果这个课题更像一个功能页面（自助查询页、报表页）而不是 AI 应用，先和业务方确认：模型到底在哪一步不可替代（检索 / 理解 / 生成 / 判断）——说不清就先别开工。",
+      render: function () {
+        return '<label class="lab">一句话目标（谁用 → 拿它决定什么）</label>' +
+          '<input type="text" data-k="goal" value="' + esc(S.goal) + '">' +
+          '<label class="lab">使用者：岗位 / 角色（不是「用户」）</label>' +
+          '<input type="text" data-k="user" value="' + esc(S.user) + '">' +
+          '<label class="lab">拿它决定什么：一个具体决定或动作</label>' +
+          '<input type="text" data-k="decision" value="' + esc(S.decision) + '">' +
+          '<label class="lab">判断错了的代价：钱 / 时间 / 责任</label>' +
+          '<input type="text" data-k="cost" value="' + esc(S.cost) + '">';
+      },
+      validate: function () {
+        var need = ["goal", "user", "decision", "cost"];
+        var miss = need.filter(function (k) { return !String(S[k] || "").trim(); });
+        if (miss.length) { alert("还有 " + miss.length + " 项没写：目标 / 使用者 / 决定什么 / 错了的代价"); return false; }
+        return true;
+      }
+    },
+    {
+      title: "第 3 步 · 手上有什么",
+      help: "<b>gstack 要靠这些来决定能不能开工、怎么造数。</b>数据是什么形态、大概多大规模、能不能给一份样例、跑在什么环境、会不会碰到生产系统——写清楚，它就不用猜。<br><b>没有数据也没关系</b>：写「需要造数」，第 3 环它会按契约造。",
+      render: function () {
+        return '<label class="lab">手上数据 / 文档是什么（制度文件 / 合同 / 工单 / 表 / 日志……）</label>' +
+          '<textarea rows="2" data-k="data">' + esc(S.data) + '</textarea>' +
+          '<label class="lab">大概量级（份数 / 行数 / 表数，估个数就行）</label>' +
+          '<input type="text" data-k="scale" value="' + esc(S.scale) + '">' +
+          '<label class="lab">能否提供一份脱敏样例给 gstack 看</label>' +
+          '<input type="text" data-k="sample" value="' + esc(S.sample) + '" placeholder="能 / 不能，为什么">' +
+          '<label class="lab">跑在哪：内网 / 离线 / 可联网；有没有 GPU</label>' +
+          '<input type="text" data-k="env" value="' + esc(S.env) + '">' +
+          '<label class="lab">涉及哪些系统，是否需要只读接入（不接触生产）</label>' +
+          '<input type="text" data-k="systems" value="' + esc(S.systems) + '">';
+      },
+      validate: function () {
+        if (!String(S.data || "").trim()) { alert("先写「手上有什么数据」——没有也写「需要造数」"); return false; }
+        if (!String(S.env || "").trim()) { alert("写清跑在什么环境（内网 / 离线 / 可联网）"); return false; }
+        return true;
+      }
+    },
+    {
+      title: "第 4 步 · 第一版做到哪",
+      help: "<b>这一版只做一件小事。</b>用一句话写「只做什么」；不做的列 3 条以内（写不出代价就先空着，gstack 会帮你在第 1 环做瘦身）；演示要看到什么，写两条具体的。<br><b>别写「平台」「全流程」</b>——那是范围没砍。",
+      render: function () {
+        return '<label class="lab">第一版只做（一句话）</label>' +
+          '<input type="text" data-k="scope" value="' + esc(S.scope) + '">' +
+          '<label class="lab">不做（3 条以内，可空）</label>' +
+          '<textarea rows="3" data-k="notDo">' + esc(S.notDo) + '</textarea>' +
+          '<label class="lab">演示时要看到什么（两条，具体的）</label>' +
+          '<textarea rows="2" data-k="demo">' + esc(S.demo) + '</textarea>';
+      },
+      validate: function () {
+        if (!String(S.scope || "").trim()) { alert("先写第一版只做什么（一句话）"); return false; }
+        if (lines(S.demo).length < 2) { alert("演示要看到什么，写两条具体的"); return false; }
+        return true;
+      }
+    },
+    {
+      title: "第 5 步 · 红线",
+      help: "<b>这三条是硬约束，勾之前想清楚。</b>数据能不能出域、要不要脱敏、会不会碰生产——这里写清楚，gstack 才知道哪些动作必须先停下来问你。",
+      render: function () {
+        var html = '<div class="lab">三条红线（逐条确认）</div>';
+        html += REDS.map(function (r) {
+          var on = S.red[r[0]] ? " checked" : "";
+          return '<label class="chk"><input type="checkbox" data-red="' + r[0] + '"' + on + '><span>' + r[1] + '</span></label>';
+        }).join("");
+        html += '<label class="lab">数据出域 / 脱敏要求（没有就写「无」；六类数据的脱敏口径见正文 3-4）</label>' +
+          '<input type="text" data-k="dataPolicy" value="' + esc(S.dataPolicy) + '">';
+        return html;
+      },
+      validate: function () {
+        if (!S.red.pii || !S.red.prod || !S.red.fake) { alert("三条红线都要确认"); return false; }
+        if (!String(S.dataPolicy || "").trim()) { alert("数据出域 / 脱敏要求写一下（没有就写「无」）"); return false; }
+        return true;
+      }
+    }
+  ];
+
+  var cur = 0;
+
+  function renderStep(i) {
+    cur = i;
+    var s = STEPS[i];
+    $("bar").style.width = Math.round((i / STEPS.length) * 100) + "%";
+    $("stepLabel").textContent = "第 " + (i + 1) + " / " + STEPS.length + " 步";
+    $("qTitle").textContent = s.title;
+    $("qHelp").innerHTML = s.help;
+    $("inputArea").innerHTML = s.render();
+    $("prevBtn").disabled = (i === 0);
+    $("nextBtn").textContent = (i === STEPS.length - 1) ? "生成启动提示词" : "下一步 →";
+    if (s.after) s.after();
+  }
+
+  function collectStep(i) {
+    var box = $("inputArea");
+    box.querySelectorAll("[data-k]").forEach(function (el) {
+      S[el.getAttribute("data-k")] = el.value;
+    });
+    box.querySelectorAll("[data-red]").forEach(function (el) {
+      S.red[el.getAttribute("data-red")] = el.checked;
+    });
+    if (i === 0) {
+      var t = $("topicInp"), d = $("deptInp");
+      if (t) S.topic = t.value;
+      if (d) S.dept = d.value;
+    }
+  }
+
+  $("startBtn").addEventListener("click", function () {
+    $("intro").classList.add("hidden");
+    $("formView").classList.remove("hidden");
+    renderStep(0);
+  });
+  $("prevBtn").addEventListener("click", function () {
+    collectStep(cur);
+    if (cur > 0) renderStep(cur - 1);
+  });
+  $("nextBtn").addEventListener("click", function () {
+    collectStep(cur);
+    if (!STEPS[cur].validate()) return;
+    if (cur < STEPS.length - 1) { renderStep(cur + 1); return; }
+    finish();
+  });
+
+  function buildPrompt() {
+    var dept = String(S.dept || "").trim();
+    var notDo = lines(S.notDo);
+    var demo = lines(S.demo);
+    var L = [];
+    L.push("请以 FDE 施工工程师（Delta 角色）身份，执行本次开发。按 gstack 八环节推进，每环停下汇报，等我拍板。");
+    L.push("");
+    L.push("【背景】");
+    L.push("- 课题：" + v(S.topic) + (dept ? "（" + dept + "）" : ""));
+    L.push("- 使用者：" + v(S.user));
+    L.push("- 拿它决定什么：" + v(S.decision));
+    L.push("- 判断错了的代价：" + v(S.cost));
+    L.push("");
+    L.push("【一句话目标】");
+    L.push(v(S.goal));
+    L.push("");
+    L.push("【素材与现状】");
+    L.push("- 手上数据 / 文档：" + v(S.data));
+    L.push("- 量级：" + v(S.scale));
+    L.push("- 脱敏样例：" + v(S.sample));
+    L.push("- 运行环境：" + v(S.env));
+    L.push("- 涉及系统：" + v(S.systems));
+    L.push("");
+    L.push("【第一版边界】");
+    L.push("- 只做：" + v(S.scope));
+    if (notDo.length) {
+      L.push("- 不做：");
+      notDo.forEach(function (x) { L.push("  · " + x); });
+    } else {
+      L.push("- 不做：由你在第 1 环瘦身时提出，列代价等我确认。");
+    }
+    L.push("- 演示时要看到：");
+    demo.forEach(function (x) { L.push("  · " + x); });
+    L.push("");
+    L.push("【红线】");
+    L.push("- 不含未脱敏的真实 PII / 管理 IP / 明文凭据。");
+    L.push("- 脚本不直连现网生产网元或生产计费库。");
+    L.push("- 不伪造评测数字；汇报的每个数字都要能在仓库里实跑出来。");
+    L.push("- 数据出域 / 脱敏要求：" + v(S.dataPolicy));
+    L.push("");
+    L.push("【推进方式】");
+    L.push("1. 第 1 环 /office-hours：先做判型（象限 + 主尺子 + 主闸）与瘦身（选一个主核、列不做清单）。**判型和瘦身各列 2–3 个选项与代价，等我拍板，不要自己定。**");
+    L.push("2. 第 2 环 /spec：把验收口径写成可判定（分母 / 判定单元 / 样本量），写出契约与三态，写清什么算未达标。");
+    L.push("3. 第 3 环 /autoplan：复核方案与风险；判型或口径还站不住，就回第 1 环重来。");
+    L.push("4. 第 4 环受控施工：进 build 前先按契约造数（固定 seed、≥8 类预埋异常、四类指纹），再先建骨架后填肉，小步提交、每步可回滚。");
+    L.push("5. 第 5–8 环：/review → /qa → /ship → /retro。");
+    L.push("6. 每完成一环停下汇报：做了什么、交了哪些文件、门禁结果；未达标项写进 known issues，不许写「基本达标」。");
+    L.push("7. 缺数据或拿不到样例时，先告诉我缺什么、影响哪一环，等我决定是造数还是缩范围；不要自己编数据。");
+    L.push("8. 收尾：所有结论都要能落到仓库文件与评测输出上（方便我出六页材料）；六页与五维口径见手册 3-7。");
+    return L.join("\n");
+  }
+
+  var CHECKS = [
+    ["课题名写了", function () { return !!String(S.topic || "").trim(); }, "第 1 步没选/没填课题。"],
+    ["一句话三件齐", function () { return ["user", "decision", "cost"].every(function (k) { return String(S[k] || "").trim(); }); }, "使用者 / 决定什么 / 错了的代价，缺一件业务方就没法认。"],
+    ["素材写清了", function () { return !!String(S.data || "").trim() && !!String(S.env || "").trim(); }, "数据形态与运行环境至少写一句。"],
+    ["边界是一件事", function () { return !!String(S.scope || "").trim() && lines(S.demo).length >= 2; }, "只做什么 + 演示看什么两条。"],
+    ["红线确认完", function () { return !!(S.red.pii && S.red.prod && S.red.fake) && !!String(S.dataPolicy || "").trim(); }, "三条红线 + 数据出域要求。"],
+    ["没把判型/造数写进需求", function () { return !/象限|主尺子|20 题|四类指纹/.test(String(S.scope || "") + String(S.goal || "")); }, "这些是 gstack 第 1–4 环的活，不用写进你的目标里。"]
+  ];
+
+  function checklistText() {
+    var L = [];
+    var failed = 0;
+    CHECKS.forEach(function (c, i) {
+      var ok = false;
+      try { ok = c[1](); } catch (e) { ok = false; }
+      if (!ok) failed++;
+      L.push((ok ? "[x] " : "[ ] ") + (i + 1) + ". " + c[0]);
+      if (!ok) L.push("    " + c[2]);
+    });
+    L.push("");
+    L.push(failed === 0 ? "全部通过：可以贴给 gstack。" : "还有 " + failed + " 项没过。");
+    return L.join("\n");
+  }
+
+  function renderChecklist() {
+    var html = "";
+    CHECKS.forEach(function (c) {
+      var ok = false;
+      try { ok = c[1](); } catch (e) { ok = false; }
+      html += '<div class="check"><div class="dot ' + (ok ? "ok" : "bad") + '">' + (ok ? "✓" : "!") + "</div>" +
+        '<div class="body"><div class="t">' + esc(c[0]) + "</div>" +
+        (ok ? "" : '<div class="s">' + esc(c[2]) + "</div>") + "</div></div>";
+    });
+    $("checkList").innerHTML = html;
+  }
+
+  function finish() {
+    $("outA").textContent = buildPrompt();
+    renderChecklist();
+    $("formView").classList.add("hidden");
+    $("resultView").classList.remove("hidden");
+    window.scrollTo(0, 0);
+  }
+
+  $("copyBtn").addEventListener("click", function () {
+    var btn = $("copyBtn");
+    var text = $("outA").textContent;
+    function flash(msg) {
+      btn.textContent = msg;
+      setTimeout(function () { btn.textContent = "复制提示词"; }, 1800);
+    }
+    function fallbackCopy() {
+      var pre = $("outA");
+      var range = document.createRange();
+      range.selectNodeContents(pre);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+      sel.removeAllRanges();
+      flash(ok ? "已复制 ✓" : "复制失败：请手动全选复制");
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { flash("已复制 ✓"); }, fallbackCopy);
+    } else {
+      fallbackCopy();
+    }
+  });
+  $("dlBtn").addEventListener("click", function () {
+    var md = "# 自选课题 · 启动提示词\n\n```text\n" + $("outA").textContent + "\n```\n";
+    var blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "自选课题-启动提示词.md";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  $("backBtn").addEventListener("click", function () {
+    $("resultView").classList.add("hidden");
+    $("formView").classList.remove("hidden");
+    renderStep(STEPS.length - 1);
+  });
+  $("resetBtn").addEventListener("click", function () { location.reload(); });
+})();
+</script>
+</body>
+</html>
