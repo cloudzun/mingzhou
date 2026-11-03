@@ -7,11 +7,20 @@ const parts = docs.map((d) => ({ title: d.title, html: render(d.body).html }));
 <html lang="zh-CN"><head><meta charset="utf-8" />
 <title>整本打印视图 · 明州 AI Coding 手册</title>
 <style is:global>@import "/src/styles/global.css";</style>
-<style>
+<!-- 必须是 is:global：正文是 set:html 注入的，拿不到 Astro 的作用域属性，
+     普通 <style> 会被编译成 [data-astro-cid-x] 选择器而全部失效（2026-11-03 踩过）。 -->
+<style is:global>
 @page { size: A4; margin: 16mm; }
 body { max-width: 780px; margin: 0 auto; padding: 16px; font-size: 10.5pt; }
+/* 每篇起新页：正文里只剩页面标题这一层 h1 */
 h1 { page-break-before: always; }
 h1:first-of-type { page-break-before: auto; }
+/* 部分与附录原来是 h1（靠上面的规则分页），2026-11-03 降为 h2 以修正网页语义层级，
+   这里按渲染后的锚点 id 前缀补回分页，效果与改动前一致。 */
+.prose h2[id^="h-第一部分"],
+.prose h2[id^="h-第二部分"],
+.prose h2[id^="h-第三部分"],
+.prose h2[id^="h-附录"] { page-break-before: always; }
 figure, table, pre { page-break-inside: avoid; }
 @media print { .noprint { display: none } }
 </style></head>
