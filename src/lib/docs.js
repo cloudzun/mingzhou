@@ -36,11 +36,13 @@ export function loadDocs() {
 export function inlineFig(id) {
   const p = path.join(SITE, "public", "figs", `fig-${id}.svg`);
   if (!fs.existsSync(p)) return `<p class="missing">[缺图 ${id}]</p>`;
+  // 只去掉 width/height 让它自适应；**不要动 mermaid 的 id**——它的 <style> 里是 #svg-N-x 选择器，
+  // 改了 id 字体会失效。锚点挂在外层 figure 上：2026-11-03 之前挂在 svg 上导致两个 id、锚点跳不过来。
   const svg = fs.readFileSync(p, "utf8").replace(/<svg([^>]*)>/, (_s, attrs) => {
     const cleaned = attrs.replace(/\s(width|height)="[^"]*"/g, "");
-    return `<svg${cleaned} id="fig-${id}" role="img" aria-label="图 ${id}">`;
+    return `<svg${cleaned} role="img" aria-label="图 ${id}">`;
   });
-  return `<figure class="fig">${svg}</figure>`;
+  return `<figure class="fig" id="fig-${id}">${svg}</figure>`;
 }
 
 

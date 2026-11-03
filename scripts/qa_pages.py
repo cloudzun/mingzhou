@@ -1,4 +1,5 @@
 """逐页 QA：本地 dist 或线上站点，一页不落。"""
+import re
 import sys
 import pathlib
 import urllib.request
@@ -40,6 +41,12 @@ for route in routes:
             issues.append("iframe 路径缺 BASE")
         if route == "/handbook/01/" and "svg" not in html:
             issues.append("无图")
+        # 图的锚点挂在外层 <figure id="fig-N-x"> 上（不是 svg 上，否则与 mermaid 自带 id 撞车）
+        if route in ("/handbook/01/", "/handbook/02/", "/handbook/03/", "/print/"):
+            if not re.search(r'id="fig-\d+-\d+"', html):
+                issues.append("图缺 id 锚点")
+        if "@@BASE@@" in html or "@@FIG_" in html:
+            issues.append("占位符未替换")
     rows.append((route, code, "OK" if not issues else "; ".join(issues)))
     bad += 1 if issues else 0
 
