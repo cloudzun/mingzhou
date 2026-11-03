@@ -1,12 +1,13 @@
 ---
 import MingShell from "../../layouts/MingShell.astro";
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 <MingShell current="fruitlab" title="水果店起手引导">
   <h1>水果店起手引导</h1>
-  <p class="lede">填完得到两段可粘贴文本：启动提示词与驱动指令，对应手册 1-C2 的真实起手方式。</p>
+  <p class="lede">填完得到一整段可粘贴文本：启动提示词 + 驱动指令。技能已经在智能体上装好，写环号它自己加载，不用再贴原文。</p>
+
   <h2>1 一句话需求</h2>
   <textarea id="need" rows="3">用 GStack 八环做一个卖水果的电商网站原型，10 种水果能浏览、能下单、订单能查到，不用数据库，做一个简单的 demo 用例。</textarea>
+
   <h2>2 四条执行约束（缺一不可）</h2>
   <ul>
     <li>八环依次走完，顺序不可跳过、不可打乱</li>
@@ -14,18 +15,35 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
     <li><strong>禁止全自动执行</strong>：每环之间停下汇报，得到许可才流转</li>
     <li>需要拍板的决策点必须列出选项与利弊，等人选择</li>
   </ul>
-  <p class="hint">第 3 条是地基：去掉它，智能体会一口气跑完八环，你拿到的是一堆没经过判断的产物。</p>
+  <p class="hint">第 3 条是地基：去掉它，智能体会一口气跑完八环，你拿到的是一堆没经过判断的产物。这四条已经压进下面生成的「驱动指令」，不用再单独写一遍。</p>
+
   <h2>3 生成</h2>
-  <button id="gen">生成两段文本</button>
-  <pre id="o1"></pre>
-  <pre id="o2"></pre>
+  <button id="gen" class="wz-btn">生成一整段提示词</button>
+  <div class="prose wz-out" id="w1" hidden>
+    <pre><code id="o1"></code></pre>
+  </div>
+  <p class="hint" id="copyhint" hidden></p>
+
   <script is:inline>
     document.getElementById("gen").addEventListener("click", function () {
-      const need = document.getElementById("need").value.trim();
-      document.getElementById("o1").textContent =
-        "【启动提示词】\n" + need + "\n\n（一句话需求要说清：数量、动作、明确不做什么、交付形态。少一样，第 1 环就开始猜。）";
-      document.getElementById("o2").textContent =
-        "【驱动指令】\n按 gstack 八环依次推进，顺序不可跳过、不可打乱：\n第 1 环 /office-hours → 第 2 环 /spec → 第 3 环 /autoplan → 第 4 环 受控施工\n→ 第 5 环 /review → 第 6 环 /qa → 第 7 环 /ship → 第 8 环 /retro。\n\n每一环结束停下汇报：这一环做了什么、交了哪些文件、门禁结果是什么。\n需要我拍板的地方，列 2 到 3 个选项和各自代价，等我选。";
+      var need = document.getElementById("need").value.trim();
+      var out =
+        "【启动提示词】\n" +
+        need +
+        "\n\n【驱动指令】\n" +
+        "按 gstack 八环依次推进，顺序不可跳过、不可打乱：\n" +
+        "第 1 环 /office-hours → 第 2 环 /spec → 第 3 环 /autoplan → 第 4 环 受控施工\n" +
+        "→ 第 5 环 /review → 第 6 环 /qa → 第 7 环 /ship → 第 8 环 /retro。\n\n" +
+        "每一环结束停下汇报：这一环做了什么、交了哪些文件、门禁结果是什么。\n" +
+        "需要我拍板的地方，列 2 到 3 个选项和各自代价，等我选。";
+
+      document.getElementById("o1").textContent = out;
+      document.getElementById("w1").hidden = false;
+
+      var hint = document.getElementById("copyhint");
+      hint.textContent =
+        "已生成：共 " + out.split("\n").length + " 行 / " + out.length + " 字符。右上角「复制」取全文。";
+      hint.hidden = false;
     });
   </script>
 </MingShell>
