@@ -75,6 +75,7 @@
     <div><span class="tag">换一个不了解项目的人接手，他要看到什么才不用重开讨论？</span></div>
     <h2>你要产出的一样东西：一段可直接交给智能体的启动提示词</h2>
     <p class="muted">它不是模板填空，而是把你在教材里做的判断落成文字。七步填完，生成提示词，跑一次<b>红线体检</b>——体检不过，别发给智能体。</p>
+    <p class="muted"><b>开工前先备料：</b>从 <code>https://www.cloudzun.com/mingzhou/kit/card1-rag-starter-kit.zip</code> 下载（或到手册站「素材与指纹」页点下载），解压到当前工程目录（包内没有外层文件夹，顶层应直接看到 <code>README-素材说明.md</code>、<code>requirements.txt</code>、<code>docs/</code>）；先跑通 <code>python eval/check_starter.py</code> 再开始填表。</p>
     <ul class="muted">
       <li><b>第 1–2 步</b>：背景与一句话目标（教材 5.2.1：先分清三层七环节，再收敛成一句话）</li>
       <li><b>第 3 步</b>：接口——输出里必须有出处，这是本场景的命门</li>
@@ -86,7 +87,7 @@
     <div class="row">
       <button class="btn" id="startBtn">开始 → 第 1 步</button>
       <button class="btn ghost" id="initBtn">📋 复制环境初始化提示词（开工前先贴这段）</button>
-      <span class="muted">约 20 分钟｜7 步｜最后自动注入数据、环境与八环节纪律</span>
+      <span class="muted">约 15 分钟｜7 步｜最后自动注入数据、环境与八环节纪律</span>
     </div>
   </section>
 
@@ -145,15 +146,16 @@ const DATA_BLOCK = [
 "【素材与硬校验 · 自动注入】",
 "- 素材包：docs/制度库/ 下 12 份合成制度 + manifest.json（含每份 sha256）；施工前全部读取，内容不得编造或改写。",
 "- 硬校验：python eval/check_starter.py → 文档 12、文件全文 23489 字符、manifest sha256 以 094a3376 开头。",
-"- 评估集：eval/starter_set.jsonl 20 题（冲突时效 / 单跳 / 多跳 / 应拒答 各 5 题），字段为 question / expect_answer_points / expect_source。",
-"- 数据断言（建完索引自己跑）：元数据非空率、条款号唯一、无重复切块、目标条款在 top-5 内。"
+"- 评估集：eval/starter_set.jsonl 20 题（15 可答 + 5 应拒答；四桶 single_hop / multi_hop / conflict_or_stale / unanswerable 各 5 题），字段为 qid / split / question / answerable / expect_answer_points / expect_source / note。",
+"- 数据断言（建完索引自己跑）：元数据非空率、条款号唯一、无重复切块、目标条款在 top-5 内；索引规模参考实现是 315 块（取决于你的分块方式，不作为验收值）。"
 ].join("\n");
 
 const INIT_PROMPT = [
 "先只做环境准备，不要写业务代码。",
 "",
+"0. 素材包与仓库：从 https://www.cloudzun.com/mingzhou/kit/card1-rag-starter-kit.zip 下载并解压到当前目录（zip 内无外层文件夹，解压后顶层应直接看到 README-素材说明.md / requirements.txt / docs/）；当前目录已有这些文件则跳过；下载失败就停下等我给 zip 文件（别改用外部镜像，也别用旧版本）。然后 git init，并在 .gitignore 里排除 .env、data/index/、.venv/、__pycache__/；提交一次「起点：素材与契约，未写实现」。",
 "1. 建独立虚拟环境 .venv 并激活；按 requirements.txt 安装依赖（版本已锁，不要升级）。",
-"2. 把 .env.example 复制成 .env，按下表写入配置（键名保持原样）：",
+"2. 把 .env.example 复制成 .env，按下面这些键值写入配置（键名保持原样）：",
 "   SILICONFLOW_BASE=https://api.siliconflow.cn/v1",
 "   SILICONFLOW_KEY=<我稍后填，先留占位>",
 "   MODEL_MAIN=deepseek-ai/DeepSeek-V3",
@@ -173,6 +175,7 @@ const INIT_PROMPT = [
 
 const ENV_BLOCK = [
 "【环境】",
+"- 素材包：若当前目录没有 README-素材说明.md，先从 https://www.cloudzun.com/mingzhou/kit/card1-rag-starter-kit.zip 下载并解压到当前目录（zip 内无外层文件夹，解压后顶层应有 README-素材说明.md / requirements.txt / docs/）；已有则跳过。下载失败就停下等我给 zip 文件，别改用外部镜像。",
 "- Python 3.12.x；建独立 venv；依赖见素材包的 requirements.txt（版本已锁）。",
 "- 模型：一家供应商覆盖三类能力（生成 / 嵌入 / 重排），base_url 与 key 只从 .env 读取。",
 "- 服务端口 4180；密钥禁止硬编码、禁止写入日志或截图。",
@@ -237,7 +240,7 @@ const STEPS = [
     q:"第 6 步 · 验收口径：做出来怎么算成功？",
     help:"训练你把验收说死。本场景不是只看答案对不对，还要看<b>出处对不对</b>；并且要写清<b>分母</b>和<b>判定方式</b>。别让智能体自己发明一套验收。",
     ph:"双指标：正确率 …（分母 …，判定方式 …）；来源可追溯率 …；来源错算 / 不算未达标。",
-    ref:"双指标验收：\n1) 答案正确率：分母为评估集题数，按\"最小事实点命中\"判定；\n2) 来源可追溯率：按文件名 + 条款号严格比对，条款号归一化后一致才算对。\n来源错误（错文件 / 错条款）算未达标，即使答案正确。\n拒答单独统计：5 条应拒答题须全部正确拒答（5/5）；误拒率单列，不并入总分。"
+    ref:"双指标验收：\n1) 答案正确率：分母为可答的 15 题（20 题里另有 5 条应拒答，单独统计、不进这个分母），按\"最小事实点命中\"判定；\n2) 来源可追溯率：按文件名 + 条款号严格比对，条款号归一化后一致才算对。\n来源错误（错文件 / 错条款）算未达标，即使答案正确。\n拒答单独统计：5 条应拒答题须全部正确拒答（5/5）；误拒率单列，不并入总分。"
   },
   {
     key:"bound", type:"textarea", rows:5,
@@ -261,7 +264,7 @@ const CHECKS = [
     sugg:"状态分三态：答出 / 声明资料不足 / 拒答；三态都要体现在输出字段里。", target:2 },
   { id:"denom", label:"分母与判定方式：指标怎么算，说死了",
     test:v => { const t=v.all; return /(分母|题数|条数)/.test(t) && /(判定|比对|怎么算|命中|归一化)/.test(t); },
-    sugg:"正确率的分母为评估集题数，判定方式为最小事实点命中；来源可追溯率按文件名+条款号严格比对（条款号归一化）。", target:5 },
+    sugg:"正确率的分母为可答的 15 题（应拒答的 5 题单独统计，不进这个分母），判定方式为最小事实点命中；来源可追溯率按文件名+条款号严格比对（条款号归一化）。", target:5 },
   { id:"dbl", label:"双指标：正确率 + 来源可追溯率，且来源错算未达标",
     test:v => { const t=v.all; return /(正确|准确)/.test(t) && /(来源|出处)/.test(t) && /(未达标|不算|扣)/.test(t); },
     sugg:"双指标：答案正确率 + 来源可追溯率；来源错（错文件/错条款）算未达标，即使答案正确。", target:5 },

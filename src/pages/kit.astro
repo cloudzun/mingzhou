@@ -17,6 +17,12 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
     <h2>校验命令</h2>
     <pre><code>python eval/check_starter.py</code></pre>
     <p>全部 PASS 才开工；对不上是数据问题，不是代码问题。</p>
+    <p class="muted">解压提示：三个 zip 都没有外层文件夹，解压到工程目录根后，顶层应直接看到 <code>README-素材说明.md</code>、<code>requirements.txt</code>、<code>.env.example</code>；卡三的契约在包根 <code>契约.md</code>（不在 <code>contracts/</code>）。先读 <code>README-素材说明.md</code> 再动手。</p>
+    <p class="muted"><b>给智能体的直链</b>（复制进提示词，它自己下载解压）：
+      <code>https://www.cloudzun.com/mingzhou/kit/card1-rag-starter-kit.zip</code>、
+      <code>https://www.cloudzun.com/mingzhou/kit/card2-sql-starter-kit.zip</code>、
+      <code>https://www.cloudzun.com/mingzhou/kit/card3-contract-starter-kit.zip</code></p>
+    <p class="muted">无外网时：直接把 zip 文件发给智能体解压；提示词里已写「下载失败就停下等文件」，不会让它乱找镜像。</p>
     <h2>下载</h2>
     <ul>
       <li><a href={BASE + "/kit/card1-rag-starter-kit.zip"}>卡一 · 政企知识问答 starter-kit（44 KB）</a></li>
