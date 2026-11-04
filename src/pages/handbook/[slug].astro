@@ -11,6 +11,18 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const docs = loadDocs();
 const { html } = render(doc.body);
 const idx = docs.findIndex((d) => d.slug === doc.slug);
+
+// 双站互链：这一篇对应教材哪几个单元（教材站 /units/<a-b>/）。
+// 手册讲"怎么做"，教材讲"为什么"，两边内容不复制，只给入口。
+const TEXTBOOK = "https://www.cloudzun.com/aicoding/";
+const XREF = {
+  "00": ["1.3"],
+  "01": ["2.1", "2.2"],
+  "02": ["5.1", "5.2", "5.3", "5.4", "5.5"],
+  "03": ["6.1", "6.2", "7.1", "7.2", "7.3"],
+};
+const units = XREF[doc.slug] || [];
+const unitHref = (no) => TEXTBOOK + "units/" + no.replace(".", "-") + "/";
 ---
 
 <MingShell current={doc.slug} title={doc.title + " · 明州 AI Coding 手册"}>
@@ -28,5 +40,17 @@ const idx = docs.findIndex((d) => d.slug === doc.slug);
   </p>
   <h1>{doc.title}</h1>
   <p class="lede">{doc.desc}</p>
+  {units.length > 0 && (
+    <p class="xref">
+      <span class="xref-k">对应教材</span>
+      <span>这一篇的"为什么"在</span>
+      <a href={TEXTBOOK} target="_blank" rel="noopener">通用 AI Coding 教材</a>
+      <span>单元</span>
+      {units.map((no) => (
+        <a class="xref-u" href={unitHref(no)} target="_blank" rel="noopener">{no}</a>
+      ))}
+      <span>展开</span>
+    </p>
+  )}
   <div class="prose" set:html={html} />
 </MingShell>

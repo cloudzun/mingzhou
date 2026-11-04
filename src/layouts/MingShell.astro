@@ -8,6 +8,9 @@ const docs = loadDocs();
 const current = Astro.props.current || "";
 const tints = ["c0", "c1", "c2", "c3"];
 
+// 双站互链的唯一常量处：教材站地址改了就改这里
+const TEXTBOOK = "https://www.cloudzun.com/aicoding/";
+
 const tools = [
   { key: "demo", label: "水果店四幕演示", href: BASE + "/demo/fruitlab/" },
   { key: "fruitlab", label: "水果店起手引导", href: BASE + "/wizard/fruitlab/" },
@@ -40,6 +43,7 @@ const tools = [
       <a href={BASE + "/demo/fruitlab/"}>演示</a>
       <a href={BASE + "/wizard/fruitlab/"}>向导</a>
       <a href={BASE + "/kit/"}>素材</a>
+      <a class="xref-link" href={TEXTBOOK} target="_blank" rel="noopener">教材 ↗</a>
       <a class="pill" href={BASE + "/search/"}>检索</a>
     </nav>
   </header>

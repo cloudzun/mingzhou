@@ -112,3 +112,12 @@ textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px
 .cards.cards-2 .card{padding:24px 24px 22px}
 .cards.cards-2 .card h3{font-size:17px}
 @media (max-width:700px){.cards.cards-2{grid-template-columns:1fr}}
+
+/* 双站互链：对应教材提示 + 顶栏教材入口 */
+.xref{margin:2px 0 18px;padding:8px 12px;border-radius:10px;font-size:13px;color:var(--muted);
+  background:color-mix(in srgb,var(--brand) 6%,transparent);border-left:3px solid var(--brand)}
+.xref-k{margin-right:8px;color:var(--brand);font-weight:700}
+.xref a{color:var(--fg-soft);text-decoration:none}
+.xref a:hover{color:var(--brand);text-decoration:underline}
+.xref-u{margin-left:6px;font-variant-numeric:tabular-nums;font-weight:600}
+.top-links .xref-link{color:var(--brand);font-weight:600}
