@@ -43,13 +43,15 @@ const unitHref = (no) => TEXTBOOK + "units/" + no.replace(".", "-") + "/";
   {units.length > 0 && (
     <p class="xref">
       <span class="xref-k">对应教材</span>
-      <span>这一篇的"为什么"在</span>
+      <span>这一篇的"为什么"见</span>
       <a href={TEXTBOOK} target="_blank" rel="noopener">通用 AI Coding 教材</a>
-      <span>单元</span>
-      {units.map((no) => (
-        <a class="xref-u" href={unitHref(no)} target="_blank" rel="noopener">{no}</a>
+      <span>的单元</span>
+      {units.map((no, i) => (
+        <>
+          {i > 0 && <span class="xref-sep">、</span>}
+          <a class="xref-u" href={unitHref(no)} target="_blank" rel="noopener">{no}</a>
+        </>
       ))}
-      <span>展开</span>
     </p>
   )}
   <div class="prose" set:html={html} />
