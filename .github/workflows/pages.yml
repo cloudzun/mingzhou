@@ -14,6 +14,20 @@ jobs:
       - run: npm ci
       - run: python3 scripts/scan_sensitive.py
       - run: npm run build
+
+      # QA 第 1 关：静态结构（快、无额外依赖）。历史教训：routes 曾手写漏测一页，报到 14/14 全绿。
+      - name: QA · 静态结构
+        run: python3 scripts/qa_pages.py local
+
+      # QA 第 2 关：真浏览器。历史教训：15/15 HTTP 全绿，但搜索结果点进去 404、演示 iframe 白屏。
+      - name: QA · 真浏览器
+        run: |
+          node scripts/serve-dist.cjs 4331 &
+          sleep 2
+          python3 -m pip install --quiet playwright
+          python3 -m playwright install --with-deps chromium
+          python3 scripts/qa_pages.py browser http://127.0.0.1:4331/mingzhou
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with: { path: dist }
